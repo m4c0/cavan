@@ -107,7 +107,8 @@ static void append_classpath(hashley::rowan &done, sim_sb *classpath,
         .fmap(cavan::read_tokens)
         .fmap(cavan::list_deps)
         .map([&](auto &deps) { append_classpath(done, classpath, &d, deps); })
-        .take([](auto) { /* assume all deps are correct */ });
+        .trace("traversing "_hs + jute::view::unsafe(key.buffer))
+        .log_error([] { throw 1; });
   }
 }
 
