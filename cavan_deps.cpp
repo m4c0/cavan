@@ -79,6 +79,11 @@ mno::req<deps> list_deps(const tokens &ts) {
   auto *t = ts.begin();
 
   for (; t->type != T_END; t++) {
+    if (match(*t, T_OPEN_TAG, "profiles")) {
+      while (!match(*t, T_CLOSE_TAG, "profiles"))
+        t++;
+      continue;
+    }
     if (match(*t, T_OPEN_TAG, "plugin")) {
       while (!match(*t, T_CLOSE_TAG, "plugin"))
         t++;
