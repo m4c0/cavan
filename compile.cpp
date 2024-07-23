@@ -34,8 +34,8 @@ static auto build_path(sim_sb *path, const char *grp, const char *art,
   return mtime::of(path->buffer);
 }
 
-static mno::req<void> find_dep_path(sim_sb *path, const char *grp,
-                                    const char *art, const char *ver) {
+[[nodiscard]] static mno::req<void>
+find_dep_path(sim_sb *path, const char *grp, const char *art, const char *ver) {
   sim_sbt grp_path{};
   sim_sb_copy(&grp_path, grp);
   while (auto *c = strchr(grp_path.buffer, '.')) {
@@ -72,9 +72,10 @@ static mno::req<void> find_dep_path(sim_sb *path, const char *grp,
                                 jute::view::unsafe(art));
 }
 
-static void append_classpath(hashley::rowan &done, sim_sb *classpath,
-                             const cavan::dep *parent,
-                             const cavan::deps &deps) {
+[[nodiscard]] static mno::req<void> append_classpath(hashley::rowan &done,
+                                                     sim_sb *classpath,
+                                                     const cavan::dep *parent,
+                                                     const cavan::deps &deps) {
   for (auto &d : deps) {
     if (d.opt)
       continue;
@@ -99,19 +100,23 @@ static void append_classpath(hashley::rowan &done, sim_sb *classpath,
     auto ver = d.ver.begin();
 
     sim_sbt path{};
-    find_dep_path(&path, grp, art, ver);
+    auto res = find_dep_path(&path, grp, art, ver)
+                   .fmap([&] {
+                     sim_sb_concat(classpath, ":");
+                     sim_sb_concat(classpath, path.buffer);
 
-    sim_sb_concat(classpath, ":");
-    sim_sb_concat(classpath, path.buffer);
-
-    sim_sb_path_set_extension(&path, "pom");
-    yoyo::file_reader::open(path.buffer)
-        .fmap(cavan::read_tokens)
-        .fmap(cavan::list_deps)
-        .map([&](auto &deps) { append_classpath(done, classpath, &d, deps); })
-        .trace("traversing "_hs + jute::view::unsafe(key.buffer))
-        .log_error([] { throw 1; });
+                     sim_sb_path_set_extension(&path, "pom");
+                     return yoyo::file_reader::open(path.buffer);
+                   })
+                   .fmap(cavan::read_tokens)
+                   .fmap(cavan::list_deps)
+                   .fmap([&](auto &deps) {
+                     return append_classpath(done, classpath, &d, deps);
+                   });
+    if (!res.is_valid())
+      return res.trace("traversing "_hs + jute::view::unsafe(key.buffer));
   }
+  return {};
 }
 
 static auto build_javac(const cavan::deps &deps) {
@@ -119,15 +124,15 @@ static auto build_javac(const cavan::deps &deps) {
 
   sim_sbt classpath{102400};
   sim_sb_copy(&classpath, "target/classes");
-  append_classpath(done, &classpath, nullptr, deps);
-
-  hai::varray<hai::cstr> args{10240};
-  args.push_back("javac"_s.cstr());
-  args.push_back("-d"_s.cstr());
-  args.push_back("target/classes"_s.cstr());
-  args.push_back("-cp"_s.cstr());
-  args.push_back(jute::view::unsafe(classpath.buffer).cstr());
-  return args;
+  return append_classpath(done, &classpath, nullptr, deps).map([&] {
+    hai::varray<hai::cstr> args{10240};
+    args.push_back("javac"_s.cstr());
+    args.push_back("-d"_s.cstr());
+    args.push_back("target/classes"_s.cstr());
+    args.push_back("-cp"_s.cstr());
+    args.push_back(jute::view::unsafe(classpath.buffer).cstr());
+    return args;
+  });
 }
 
 static void run(hai::varray<hai::cstr> &args) {
@@ -143,7 +148,7 @@ static void compile(const char *pom, jute::view src) {
       .fmap(cavan::read_tokens)
       .fpeek(cavan::lint_xml)
       .fmap(cavan::list_deps)
-      .map(build_javac)
+      .fmap(build_javac)
       .peek([&](auto &args) { args.push_back(src.cstr()); })
       .map(run)
       .log_error([] { throw 1; });
