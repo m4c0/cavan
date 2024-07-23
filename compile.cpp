@@ -78,8 +78,7 @@ static void find_dep_path(sim_sb *path, const cavan::dep &d) {
 }
 
 static auto build_javac(cavan::deps &deps) {
-  hai::varray<hai::cstr> args{10240};
-  args.push_back("javac"_s.cstr());
+  sim_sbt classpath{102400};
 
   for (auto &d : deps) {
     if (d.scp != "compile"_s)
@@ -88,10 +87,16 @@ static auto build_javac(cavan::deps &deps) {
     sim_sbt path{};
     find_dep_path(&path, d);
 
-    args.push_back("-cp"_s.cstr());
-    args.push_back(jute::view::unsafe(path.buffer).cstr());
+    if (classpath.len != 0)
+      sim_sb_concat(&classpath, ":");
+
+    sim_sb_concat(&classpath, path.buffer);
   }
 
+  hai::varray<hai::cstr> args{10240};
+  args.push_back("javac"_s.cstr());
+  args.push_back("-cp"_s.cstr());
+  args.push_back(jute::view::unsafe(classpath.buffer).cstr());
   return args;
 }
 
