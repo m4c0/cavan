@@ -162,8 +162,18 @@ mno::req<dep> take_dep(const token *&t) {
 mno::req<deps> list_deps(const tokens &ts) {
   auto *t = ts.begin();
 
+  for (; t->type != T_END; t++) {
+    if (t->type == T_OPEN_TAG && "dependencies"_s == t->id)
+      break;
+  }
+  if (t->type == T_END)
+    return mno::req<deps>::failed("missing <dependencies>");
+
   mno::req<deps> res{deps{128}};
   for (; t->type != T_END && res.is_valid(); t++) {
+    if (t->type == T_CLOSE_TAG && "dependencies"_s == t->id)
+      return res;
+
     if (t->type != T_OPEN_TAG || "dependency"_s != t->id)
       continue;
 
@@ -175,7 +185,8 @@ mno::req<deps> list_deps(const tokens &ts) {
         },
         res, dep);
   }
-  return res;
+  return mno::req<deps>::failed("missing </dependencies>");
+  ;
 }
 
 int main(int argc, char **argv) try {
