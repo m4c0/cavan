@@ -4,6 +4,7 @@
 export module cavan;
 import jute;
 import hai;
+import hashley;
 import missingno;
 import yoyo;
 
@@ -30,6 +31,7 @@ export struct dep {
   hai::cstr ver{};
   hai::cstr scp{"compile"_s.cstr()};
   bool opt{};
+  hashley::rowan exc{};
 };
 export using deps = hai::varray<dep>;
 

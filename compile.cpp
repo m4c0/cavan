@@ -85,6 +85,9 @@ static void append_classpath(hashley::rowan &done, sim_sb *classpath,
     if (k > 0)
       continue;
 
+    if (parent && parent->exc[key.buffer])
+      continue;
+
     k = 1;
 
     auto grp =

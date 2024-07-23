@@ -16,6 +16,28 @@ namespace cavan {
   return mno::req{};
 }
 
+[[nodiscard]] static mno::req<void> take_exclusions(const token *&t,
+                                                    hashley::rowan &exc) {
+  hai::cstr grp{};
+  hai::cstr art{};
+  mno::req<void> res{};
+  for (; !match(*t, T_END); t++) {
+    if (match(*t, T_OPEN_TAG, "groupId")) {
+      res = take_tag("groupId", t, &grp);
+    } else if (match(*t, T_OPEN_TAG, "artifactId")) {
+      res = take_tag("artifactId", t, &art);
+    } else if (match(*t, T_CLOSE_TAG, "exclusion")) {
+      auto key = ""_hs + grp + ":" + art + "\0";
+      exc[(*key).begin()] = 1;
+    } else if (match(*t, T_CLOSE_TAG, "exclusions")) {
+      return {};
+    }
+    if (!res.is_valid())
+      return res;
+  }
+  return res;
+}
+
 [[nodiscard]] static mno::req<dep> take_dep(const token *&t) {
   dep d{};
 
@@ -33,8 +55,7 @@ namespace cavan {
       hai::cstr tmp{100};
       res = take_tag("scope", t, &tmp).map([&] { d.opt = "true"_s == tmp; });
     } else if (match(*t, T_OPEN_TAG, "exclusions")) {
-      while (!match(*t, T_CLOSE_TAG, "exclusions"))
-        t++;
+      res = take_exclusions(t, d.exc);
     } else if (match(*t, T_CLOSE_TAG, "dependency")) {
       break;
     } else {
