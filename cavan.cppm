@@ -1,3 +1,4 @@
+#pragma leco add_impl cavan_deps
 #pragma leco add_impl cavan_lint
 #pragma leco add_impl cavan_tokenizer
 export module cavan;
@@ -40,4 +41,6 @@ export [[nodiscard]] mno::req<tokens> split_tokens(const hai::cstr &cstr);
 export [[nodiscard]] mno::req<tokens> read_tokens(yoyo::reader &r);
 
 export [[nodiscard]] mno::req<void> lint_xml(const tokens &tokens);
+
+export [[nodiscard]] mno::req<deps> list_deps(const tokens &ts);
 } // namespace cavan
