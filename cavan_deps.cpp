@@ -32,6 +32,9 @@ namespace cavan {
     } else if (match(*t, T_OPEN_TAG, "optional")) {
       hai::cstr tmp{100};
       res = take_tag("scope", t, &tmp).map([&] { d.opt = "true"_s == tmp; });
+    } else if (match(*t, T_OPEN_TAG, "exclusions")) {
+      while (!match(*t, T_CLOSE_TAG, "exclusions"))
+        t++;
     } else if (match(*t, T_CLOSE_TAG, "dependency")) {
       break;
     } else {
@@ -49,6 +52,12 @@ mno::req<deps> list_deps(const tokens &ts) {
   auto *t = ts.begin();
 
   for (; t->type != T_END; t++) {
+    if (match(*t, T_OPEN_TAG, "plugin")) {
+      while (!match(*t, T_CLOSE_TAG, "plugin"))
+        t++;
+      continue;
+    }
+
     if (match(*t, T_OPEN_TAG, "dependencies"))
       break;
   }
