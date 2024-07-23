@@ -82,8 +82,9 @@ mno::req<deps> list_deps(const tokens &ts) {
     if (match(*t, T_OPEN_TAG, "dependencies"))
       break;
   }
+  // No <dependencies>
   if (match(*t, T_END))
-    return mno::req<deps>::failed("missing <dependencies>");
+    return mno::req<deps>{};
 
   mno::req<deps> res{deps{128}};
   for (; t->type != T_END && res.is_valid(); t++) {
