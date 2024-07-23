@@ -25,16 +25,16 @@ static void build_path(sim_sb *path, const char *grp, const char *art) {
 }
 
 static auto build_path(sim_sb *path, const char *grp, const char *art,
-                       const char *ver) {
+                       const char *ver, const char *type) {
   build_path(path, grp, art);
   sim_sb_path_append(path, ver);
   sim_sb_path_append(path, art);
-  sim_sb_printf(path, "-%s.jar", ver);
+  sim_sb_printf(path, "-%s.%s", ver, type);
   return mtime::of(path->buffer);
 }
 static void check_path(sim_sb *path, const char *grp, const char *art,
-                       const char *ver) {
-  if (build_path(path, grp, art, ver))
+                       const char *ver, const char *type) {
+  if (build_path(path, grp, art, ver, type))
     return;
 
   silog::log(silog::error, "file not found: %s", path->buffer);
@@ -49,11 +49,11 @@ static void find_dep_path(sim_sb *path, const cavan::dep &d) {
   }
 
   if (d.ver.begin()) {
-    check_path(path, grp_path.buffer, d.art.begin(), d.ver.begin());
+    check_path(path, grp_path.buffer, d.art.begin(), d.ver.begin(), "jar");
     return;
   }
 
-  if (build_path(path, grp_path.buffer, d.art.begin(), "1.0-SNAPSHOT"))
+  if (build_path(path, grp_path.buffer, d.art.begin(), "1.0-SNAPSHOT", "jar"))
     return;
 
   mtime::t max{};
@@ -61,7 +61,7 @@ static void find_dep_path(sim_sb *path, const cavan::dep &d) {
   build_path(path, grp_path.buffer, d.art.begin());
   for (auto ver : pprent::list(path->buffer)) {
     sim_sbt tmp{};
-    auto mtime = build_path(&tmp, grp_path.buffer, d.art.begin(), ver);
+    auto mtime = build_path(&tmp, grp_path.buffer, d.art.begin(), ver, "jar");
 
     if (mtime < max)
       continue;
