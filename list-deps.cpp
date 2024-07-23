@@ -43,7 +43,12 @@ static auto read_tag(const char *&b) {
   if (!*b)
     return mno::req<token>::failed("expecting '>' got EOF");
 
-  auto id = jute::view{start, static_cast<unsigned>(b - start)};
+  const char *end;
+  for (end = start; end <= b; end++)
+    if (*end == ' ')
+      break;
+
+  auto id = jute::view{start, static_cast<unsigned>(end - start)};
   return mno::req{token{id.cstr()}};
 }
 
@@ -84,7 +89,7 @@ int main(int argc, char **argv) try {
       .map([](auto &tokens) {
         silog::log(silog::info, "got %d tokens", tokens.size());
         for (auto &t : tokens) {
-          silog::log(silog::info, "-- %s", t.id.begin());
+          silog::log(silog::info, "-- [%s]", t.id.begin());
         }
       })
       .log_error([] { throw 1; });
