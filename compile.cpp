@@ -34,27 +34,28 @@ static auto build_path(sim_sb *path, const char *grp, const char *art,
   return mtime::of(path->buffer);
 }
 
-static void find_dep_path(sim_sb *path, const cavan::dep &d) {
+static void find_dep_path(sim_sb *path, const char *grp, const char *art,
+                          const char *ver) {
   sim_sbt grp_path{};
-  sim_sb_copy(&grp_path, d.grp.begin());
+  sim_sb_copy(&grp_path, grp);
   while (auto *c = strchr(grp_path.buffer, '.')) {
     *c = '/';
   }
 
-  if (d.ver.begin()) {
-    if (build_path(path, grp_path.buffer, d.art.begin(), d.ver.begin(), "jar"))
+  if (ver) {
+    if (build_path(path, grp_path.buffer, art, ver, "jar"))
       return;
   }
 
-  if (build_path(path, grp_path.buffer, d.art.begin(), "1.0-SNAPSHOT", "jar"))
+  if (build_path(path, grp_path.buffer, art, "1.0-SNAPSHOT", "jar"))
     return;
 
   mtime::t max{};
 
-  build_path(path, grp_path.buffer, d.art.begin());
+  build_path(path, grp_path.buffer, art);
   for (auto ver : pprent::list(path->buffer)) {
     sim_sbt tmp{};
-    auto mtime = build_path(&tmp, grp_path.buffer, d.art.begin(), ver, "jar");
+    auto mtime = build_path(&tmp, grp_path.buffer, art, ver, "jar");
 
     if (mtime < max)
       continue;
@@ -64,13 +65,13 @@ static void find_dep_path(sim_sb *path, const cavan::dep &d) {
   }
 
   if (max == 0) {
-    silog::log(silog::error, "dependency not found: %s:%s", d.grp.begin(),
-               d.art.begin());
+    silog::log(silog::error, "dependency not found: %s:%s", grp, art);
     throw 1;
   }
 }
 
 static void append_classpath(hashley::rowan &done, sim_sb *classpath,
+                             const cavan::dep *parent,
                              const cavan::deps &deps) {
   for (auto &d : deps) {
     if (d.opt)
@@ -86,8 +87,14 @@ static void append_classpath(hashley::rowan &done, sim_sb *classpath,
 
     k = 1;
 
+    auto grp =
+        "${project.groupId}"_s == d.grp ? parent->grp.begin() : d.grp.begin();
+    auto art = "${project.artifactId}"_s == d.art ? parent->art.begin()
+                                                  : d.art.begin();
+    auto ver = d.ver.begin();
+
     sim_sbt path{};
-    find_dep_path(&path, d);
+    find_dep_path(&path, grp, art, ver);
 
     sim_sb_concat(classpath, ":");
     sim_sb_concat(classpath, path.buffer);
@@ -96,7 +103,7 @@ static void append_classpath(hashley::rowan &done, sim_sb *classpath,
     yoyo::file_reader::open(path.buffer)
         .fmap(cavan::read_tokens)
         .fmap(cavan::list_deps)
-        .map([&](auto &deps) { append_classpath(done, classpath, deps); })
+        .map([&](auto &deps) { append_classpath(done, classpath, &d, deps); })
         .take([](auto) { /* assume all deps are correct */ });
   }
 }
@@ -106,7 +113,7 @@ static auto build_javac(const cavan::deps &deps) {
 
   sim_sbt classpath{102400};
   sim_sb_copy(&classpath, "target/classes");
-  append_classpath(done, &classpath, deps);
+  append_classpath(done, &classpath, nullptr, deps);
 
   hai::varray<hai::cstr> args{10240};
   args.push_back("javac"_s.cstr());
