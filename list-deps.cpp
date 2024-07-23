@@ -13,6 +13,8 @@ static void usage() {
   throw 1;
 }
 
+using namespace jute::literals;
+
 enum type {
   T_NULL,
   T_OPEN_TAG,
@@ -108,15 +110,65 @@ static auto split_tokens(const hai::cstr &cstr) {
   return ts.peek([](auto &ts) { ts.push_back_doubling(token{{}, T_END}); });
 }
 
-void list_deps(const token *t) {
-  using namespace jute::literals;
+[[nodiscard]] mno::req<const char *> take_tag(jute::view exp_id,
+                                              const token *&t) {
+  t++;
+  if (t->type != T_TEXT)
+    return mno::req<const char *>::failed("expecting text inside tag");
 
-  int count{};
+  const auto *res = t->id.begin();
+
+  t++;
+  if (t->type != T_CLOSE_TAG || exp_id != t->id)
+    return mno::req<const char *>::failed("missing close tag");
+
+  return mno::req{res};
+}
+
+mno::req<void> print_dep(const token *&t) {
+  const char *grp{};
+  const char *art{};
+  const char *ver{};
+  const char *scp{"compile"};
+
   for (; t->type != T_END; t++) {
-    if (t->type == T_OPEN_TAG && "dependency"_s == t->id)
-      count++;
+    mno::req<void> res{};
+    if (t->type == T_OPEN_TAG && "groupId"_s == t->id) {
+      res = take_tag("groupId", t).map([&](auto g) { grp = g; });
+    } else if (t->type == T_OPEN_TAG && "artifactId"_s == t->id) {
+      res = take_tag("artifactId", t).map([&](auto g) { art = g; });
+    } else if (t->type == T_OPEN_TAG && "version"_s == t->id) {
+      res = take_tag("version", t).map([&](auto g) { ver = g; });
+    } else if (t->type == T_OPEN_TAG && "scope"_s == t->id) {
+      res = take_tag("scope", t).map([&](auto g) { scp = g; });
+    } else if (t->type == T_CLOSE_TAG && "dependency"_s == t->id) {
+      t++;
+      break;
+    } else {
+      silog::log(silog::debug, "%d %s--", t->type, t->id.begin());
+      res = mno::req<void>::failed("unknown stuff found inside depencies");
+    }
+    if (!res.is_valid())
+      return res;
   }
-  silog::log(silog::debug, "found %d dependencies", count);
+
+  silog::log(silog::debug, "dependency: %s:%s:%s:%s", grp, art, ver, scp);
+  return mno::req{};
+}
+
+mno::req<void> list_deps(const token *t) {
+  mno::req count{0};
+  for (; t->type != T_END && count.is_valid(); t++) {
+    if (t->type != T_OPEN_TAG || "dependency"_s != t->id)
+      continue;
+
+    count = print_dep(++t).fmap([&] { return count; }).map([](auto c) {
+      return c + 1;
+    });
+  }
+  return count.map([](auto count) {
+    silog::log(silog::debug, "found %d dependencies", count);
+  });
 }
 
 int main(int argc, char **argv) try {
@@ -146,7 +198,7 @@ int main(int argc, char **argv) try {
       .peek([](auto &tokens) {
         silog::log(silog::info, "got %d tokens", tokens.size());
       })
-      .map([](auto &tokens) { list_deps(tokens.begin()); })
+      .fmap([](auto &tokens) { return list_deps(tokens.begin()); })
       .log_error([] { throw 1; });
 } catch (...) {
   return 1;
