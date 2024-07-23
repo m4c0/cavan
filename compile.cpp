@@ -32,14 +32,6 @@ static auto build_path(sim_sb *path, const char *grp, const char *art,
   sim_sb_printf(path, "-%s.%s", ver, type);
   return mtime::of(path->buffer);
 }
-static void check_path(sim_sb *path, const char *grp, const char *art,
-                       const char *ver, const char *type) {
-  if (build_path(path, grp, art, ver, type))
-    return;
-
-  silog::log(silog::error, "file not found: %s", path->buffer);
-  throw 1;
-}
 
 static void find_dep_path(sim_sb *path, const cavan::dep &d) {
   sim_sbt grp_path{};
@@ -49,8 +41,8 @@ static void find_dep_path(sim_sb *path, const cavan::dep &d) {
   }
 
   if (d.ver.begin()) {
-    check_path(path, grp_path.buffer, d.art.begin(), d.ver.begin(), "jar");
-    return;
+    if (build_path(path, grp_path.buffer, d.art.begin(), d.ver.begin(), "jar"))
+      return;
   }
 
   if (build_path(path, grp_path.buffer, d.art.begin(), "1.0-SNAPSHOT", "jar"))
