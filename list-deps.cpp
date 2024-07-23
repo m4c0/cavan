@@ -17,8 +17,8 @@ static void usage() {
   throw 1;
 }
 
-[[nodiscard]] mno::req<void> take_tag(jute::view exp_id, const token *&t,
-                                      hai::cstr *out) {
+[[nodiscard]] static mno::req<void> take_tag(jute::view exp_id, const token *&t,
+                                             hai::cstr *out) {
   t++;
   if (!match(*t, T_TEXT))
     return mno::req<void>::failed("expecting text inside tag");
@@ -32,7 +32,7 @@ static void usage() {
   return mno::req{};
 }
 
-mno::req<dep> take_dep(const token *&t) {
+[[nodiscard]] static mno::req<dep> take_dep(const token *&t) {
   dep d{};
 
   for (; t->type != T_END; t++) {
@@ -58,7 +58,7 @@ mno::req<dep> take_dep(const token *&t) {
   return mno::req{traits::move(d)};
 }
 
-mno::req<deps> list_deps(const tokens &ts) {
+[[nodiscard]] static mno::req<deps> list_deps(const tokens &ts) {
   auto *t = ts.begin();
 
   for (; t->type != T_END; t++) {
@@ -88,11 +88,22 @@ mno::req<deps> list_deps(const tokens &ts) {
 }
 
 int main(int argc, char **argv) try {
-  auto input = yoyo::file_reader::std_in();
   auto opts = gopt_parse(argc, argv, "i:", [&](auto ch, auto val) {
     switch (ch) {
     case 'i':
-      input = yoyo::file_reader::open(val);
+      yoyo::file_reader::open(val)
+          .fmap(cavan::read_tokens)
+          .fpeek(cavan::lint_xml)
+          .fmap(list_deps)
+          .map([](auto &deps) {
+            silog::log(silog::info, "found %d dependencies", deps.size());
+
+            for (auto &d : deps) {
+              silog::log(silog::debug, "%s:%s:%s:%s", d.grp.begin(),
+                         d.art.begin(), d.ver.begin(), d.scp.begin());
+            }
+          })
+          .log_error([] { throw 1; });
       break;
     default:
       usage();
@@ -101,19 +112,6 @@ int main(int argc, char **argv) try {
 
   if (opts.argc != 0)
     usage();
-
-  input.fmap(cavan::read_tokens)
-      .fpeek(cavan::lint_xml)
-      .fmap(list_deps)
-      .map([](auto &deps) {
-        silog::log(silog::info, "found %d dependencies", deps.size());
-
-        for (auto &d : deps) {
-          silog::log(silog::debug, "%s:%s:%s:%s", d.grp.begin(), d.art.begin(),
-                     d.ver.begin(), d.scp.begin());
-        }
-      })
-      .log_error([] { throw 1; });
 } catch (...) {
   return 1;
 }
