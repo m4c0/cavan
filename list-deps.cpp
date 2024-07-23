@@ -102,18 +102,7 @@ int main(int argc, char **argv) try {
   if (opts.argc != 0)
     usage();
 
-  input.fmap(yoyo::size())
-      .map([](auto sz) { return hai::cstr{static_cast<unsigned>(sz)}; })
-      .fpeek([&](auto &buf) {
-        return input.fmap(yoyo::read(buf.begin(), buf.size()));
-      })
-      .peek([](auto &buffer) {
-        silog::log(silog::info, "read %d bytes", buffer.size());
-      })
-      .fmap(split_tokens)
-      .peek([](auto &tokens) {
-        silog::log(silog::info, "got %d tokens", tokens.size());
-      })
+  input.fmap(cavan::read_tokens)
       .fmap(list_deps)
       .map([](auto &deps) {
         silog::log(silog::info, "found %d dependencies", deps.size());

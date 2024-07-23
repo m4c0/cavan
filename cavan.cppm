@@ -2,6 +2,7 @@ export module cavan;
 import jute;
 import hai;
 import missingno;
+import yoyo;
 
 using namespace jute::literals;
 
@@ -111,5 +112,12 @@ export mno::req<tokens> split_tokens(const hai::cstr &cstr) {
         ts, t);
   }
   return ts.peek([](auto &ts) { ts.push_back_doubling(token{{}, T_END}); });
+}
+
+export mno::req<tokens> read_tokens(yoyo::reader &r) {
+  return r.size()
+      .map([](auto sz) { return hai::cstr{static_cast<unsigned>(sz)}; })
+      .fpeek([&](auto &buf) { return r.read(buf.begin(), buf.size()); })
+      .fmap(cavan::split_tokens);
 }
 } // namespace cavan
