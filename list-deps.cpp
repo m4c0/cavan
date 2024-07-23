@@ -21,7 +21,7 @@ enum type {
   T_TEXT,
 };
 struct token {
-  jute::view id{};
+  hai::cstr id{};
   type type{};
 };
 using tokens = hai::varray<token>;
@@ -44,7 +44,7 @@ static auto read_tag(const char *&b) {
     return mno::req<token>::failed("expecting '>' got EOF");
 
   auto id = jute::view{start, static_cast<unsigned>(b - start)};
-  return mno::req{token{id}};
+  return mno::req{token{id.cstr()}};
 }
 
 static auto split_tokens(const hai::cstr &cstr) {
@@ -53,7 +53,7 @@ static auto split_tokens(const hai::cstr &cstr) {
   tokens ts{1024};
   return take(buffer, '<')
       .fmap([&] { return read_tag(buffer); })
-      .map([&](token t) { ts.push_back_doubling(t); })
+      .map([&](token &t) { ts.push_back_doubling(traits::move(t)); })
       .map([&] { return traits::move(ts); });
 }
 
@@ -83,9 +83,8 @@ int main(int argc, char **argv) try {
       .fmap(split_tokens)
       .map([](auto &tokens) {
         silog::log(silog::info, "got %d tokens", tokens.size());
-        for (auto t : tokens) {
-          silog::log(silog::info, "-- %.*s", static_cast<unsigned>(t.id.size()),
-                     t.id.begin());
+        for (auto &t : tokens) {
+          silog::log(silog::info, "-- %s", t.id.begin());
         }
       })
       .log_error([] { throw 1; });
