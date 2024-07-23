@@ -29,6 +29,14 @@ struct token {
 };
 using tokens = hai::varray<token>;
 
+struct dep {
+  hai::cstr grp{};
+  hai::cstr art{};
+  hai::cstr ver{};
+  hai::cstr scp{"compile"_s.cstr()};
+};
+using deps = hai::varray<dep>;
+
 static auto blank(const char *c) {
   return *c == ' ' || *c == '\t' || *c == '\n' || *c == '\r';
 }
@@ -110,65 +118,64 @@ static auto split_tokens(const hai::cstr &cstr) {
   return ts.peek([](auto &ts) { ts.push_back_doubling(token{{}, T_END}); });
 }
 
-[[nodiscard]] mno::req<const char *> take_tag(jute::view exp_id,
-                                              const token *&t) {
+[[nodiscard]] mno::req<void> take_tag(jute::view exp_id, const token *&t,
+                                      hai::cstr *out) {
   t++;
   if (t->type != T_TEXT)
-    return mno::req<const char *>::failed("expecting text inside tag");
+    return mno::req<void>::failed("expecting text inside tag");
 
-  const auto *res = t->id.begin();
+  *out = jute::view{t->id}.cstr();
 
   t++;
   if (t->type != T_CLOSE_TAG || exp_id != t->id)
-    return mno::req<const char *>::failed("missing close tag");
+    return mno::req<void>::failed("missing close tag");
 
-  return mno::req{res};
+  return mno::req{};
 }
 
-mno::req<void> print_dep(const token *&t) {
-  const char *grp{};
-  const char *art{};
-  const char *ver{};
-  const char *scp{"compile"};
+mno::req<dep> take_dep(const token *&t) {
+  dep d{};
 
   for (; t->type != T_END; t++) {
     mno::req<void> res{};
     if (t->type == T_OPEN_TAG && "groupId"_s == t->id) {
-      res = take_tag("groupId", t).map([&](auto g) { grp = g; });
+      res = take_tag("groupId", t, &d.grp);
     } else if (t->type == T_OPEN_TAG && "artifactId"_s == t->id) {
-      res = take_tag("artifactId", t).map([&](auto g) { art = g; });
+      res = take_tag("artifactId", t, &d.art);
     } else if (t->type == T_OPEN_TAG && "version"_s == t->id) {
-      res = take_tag("version", t).map([&](auto g) { ver = g; });
+      res = take_tag("version", t, &d.ver);
     } else if (t->type == T_OPEN_TAG && "scope"_s == t->id) {
-      res = take_tag("scope", t).map([&](auto g) { scp = g; });
+      res = take_tag("scope", t, &d.scp);
     } else if (t->type == T_CLOSE_TAG && "dependency"_s == t->id) {
-      t++;
       break;
     } else {
-      silog::log(silog::debug, "%d %s--", t->type, t->id.begin());
       res = mno::req<void>::failed("unknown stuff found inside depencies");
     }
     if (!res.is_valid())
-      return res;
+      return res.map([] { return dep{}; });
   }
 
-  silog::log(silog::debug, "dependency: %s:%s:%s:%s", grp, art, ver, scp);
-  return mno::req{};
+  // silog::log(silog::debug, "dependency: %s:%s:%s:%s", grp, art, ver, scp);
+  return mno::req{traits::move(d)};
 }
 
-mno::req<void> list_deps(const token *t) {
-  mno::req count{0};
-  for (; t->type != T_END && count.is_valid(); t++) {
+mno::req<deps> list_deps(const tokens &ts) {
+  auto *t = ts.begin();
+
+  mno::req<deps> res{deps{128}};
+  for (; t->type != T_END && res.is_valid(); t++) {
     if (t->type != T_OPEN_TAG || "dependency"_s != t->id)
       continue;
 
-    count = print_dep(++t).fmap([&] { return count; }).map([](auto c) {
-      return c + 1;
-    });
+    auto dep = take_dep(++t);
+    res = mno::combine(
+        [](auto &ds, auto &d) {
+          ds.push_back_doubling(d);
+          return traits::move(ds);
+        },
+        res, dep);
   }
-  return count.map([](auto count) {
-    silog::log(silog::debug, "found %d dependencies", count);
-  });
+  return res;
 }
 
 int main(int argc, char **argv) try {
@@ -198,7 +205,15 @@ int main(int argc, char **argv) try {
       .peek([](auto &tokens) {
         silog::log(silog::info, "got %d tokens", tokens.size());
       })
-      .fmap([](auto &tokens) { return list_deps(tokens.begin()); })
+      .fmap(list_deps)
+      .map([](auto &deps) {
+        silog::log(silog::info, "found %d dependencies", deps.size());
+
+        for (auto &d : deps) {
+          silog::log(silog::debug, "%s:%s:%s:%s", d.grp.begin(), d.art.begin(),
+                     d.ver.begin(), d.scp.begin());
+        }
+      })
       .log_error([] { throw 1; });
 } catch (...) {
   return 1;
