@@ -2,6 +2,7 @@
 
 import gopt;
 import hai;
+import jute;
 import traits;
 import yoyo;
 import silog;
@@ -12,8 +13,16 @@ static void usage() {
   throw 1;
 }
 
+enum type {
+  T_NULL,
+  T_OPEN_TAG,
+  T_CLOSE_TAG,
+  T_TAG,
+  T_TEXT,
+};
 struct token {
-  hai::cstr id{};
+  jute::view id{};
+  type type{};
 };
 using tokens = hai::varray<token>;
 
@@ -26,19 +35,26 @@ static auto take(const char *&buffer, char c) {
 }
 
 static auto read_tag(const char *&b) {
+  const char *start = b;
+
   while (*b && *b != '>')
     b++;
 
-  return *b ? mno::req{} : mno::req<void>::failed("expecting '>' got EOF");
+  if (!*b)
+    return mno::req<token>::failed("expecting '>' got EOF");
+
+  auto id = jute::view{start, static_cast<unsigned>(b - start)};
+  return mno::req{token{id}};
 }
 
 static auto split_tokens(const hai::cstr &cstr) {
   const char *buffer = cstr.begin();
 
   tokens ts{1024};
-  return take(buffer, '<').fmap([&] { return read_tag(buffer); }).map([&] {
-    return traits::move(ts);
-  });
+  return take(buffer, '<')
+      .fmap([&] { return read_tag(buffer); })
+      .map([&](token t) { ts.push_back_doubling(t); })
+      .map([&] { return traits::move(ts); });
 }
 
 int main(int argc, char **argv) try {
@@ -67,6 +83,10 @@ int main(int argc, char **argv) try {
       .fmap(split_tokens)
       .map([](auto &tokens) {
         silog::log(silog::info, "got %d tokens", tokens.size());
+        for (auto t : tokens) {
+          silog::log(silog::info, "-- %.*s", static_cast<unsigned>(t.id.size()),
+                     t.id.begin());
+        }
       })
       .log_error([] { throw 1; });
 } catch (...) {
