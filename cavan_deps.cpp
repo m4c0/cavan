@@ -11,7 +11,7 @@ namespace cavan {
 
   t++;
   if (!match(*t, T_CLOSE_TAG, exp_id))
-    return mno::req<void>::failed("missing close tag");
+    return mno::req<void>::failed("missing close tag for " + exp_id);
 
   return mno::req{};
 }
@@ -33,7 +33,7 @@ namespace cavan {
       return {};
     }
     if (!res.is_valid())
-      return res;
+      return res.trace("parsing exclusions");
   }
   return res;
 }
@@ -62,7 +62,7 @@ namespace cavan {
       res = mno::req<void>::failed("unknown stuff found inside dependencies");
     }
     if (!res.is_valid())
-      return res.map([] { return dep{}; });
+      return res.map([] { return dep{}; }).trace("parsing dependency");
   }
 
   // silog::log(silog::debug, "dependency: %s:%s:%s:%s", grp, art, ver, scp);
