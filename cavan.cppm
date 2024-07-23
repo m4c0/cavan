@@ -1,3 +1,4 @@
+#pragma leco add_impl cavan_lint
 #pragma leco add_impl cavan_tokenizer
 export module cavan;
 import jute;
@@ -35,6 +36,8 @@ export bool match(const token &t, type tp, jute::view id) {
   return t.type == tp && t.id == id;
 }
 
-export mno::req<tokens> split_tokens(const hai::cstr &cstr);
-export mno::req<tokens> read_tokens(yoyo::reader &r);
+export [[nodiscard]] mno::req<tokens> split_tokens(const hai::cstr &cstr);
+export [[nodiscard]] mno::req<tokens> read_tokens(yoyo::reader &r);
+
+export [[nodiscard]] mno::req<void> lint_xml(const tokens &tokens);
 } // namespace cavan

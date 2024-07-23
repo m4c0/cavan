@@ -103,6 +103,7 @@ int main(int argc, char **argv) try {
     usage();
 
   input.fmap(cavan::read_tokens)
+      .fpeek(cavan::lint_xml)
       .fmap(list_deps)
       .map([](auto &deps) {
         silog::log(silog::info, "found %d dependencies", deps.size());
