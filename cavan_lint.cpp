@@ -18,7 +18,7 @@ static mno::req<void> lint_tag(const token *&t) {
     if (match(*t, T_OPEN_TAG)) {
       auto res = lint_tag(t);
       if (!res.is_valid())
-        return res;
+        return res.trace("inside "_hs + id);
       continue;
     }
   }
