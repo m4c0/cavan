@@ -34,8 +34,8 @@ static auto build_path(sim_sb *path, const char *grp, const char *art,
   return mtime::of(path->buffer);
 }
 
-static void find_dep_path(sim_sb *path, const char *grp, const char *art,
-                          const char *ver) {
+static mno::req<void> find_dep_path(sim_sb *path, const char *grp,
+                                    const char *art, const char *ver) {
   sim_sbt grp_path{};
   sim_sb_copy(&grp_path, grp);
   while (auto *c = strchr(grp_path.buffer, '.')) {
@@ -44,11 +44,11 @@ static void find_dep_path(sim_sb *path, const char *grp, const char *art,
 
   if (ver) {
     if (build_path(path, grp_path.buffer, art, ver, "jar"))
-      return;
+      return {};
   }
 
   if (build_path(path, grp_path.buffer, art, "1.0-SNAPSHOT", "jar"))
-    return;
+    return {};
 
   mtime::t max{};
 
@@ -64,10 +64,12 @@ static void find_dep_path(sim_sb *path, const char *grp, const char *art,
     max = mtime;
   }
 
-  if (max == 0) {
-    silog::log(silog::error, "dependency not found: %s:%s", grp, art);
-    throw 1;
-  }
+  if (max > 0)
+    return {};
+
+  return mno::req<void>::failed("dependency not found: "_hs +
+                                jute::view::unsafe(grp) + ":" +
+                                jute::view::unsafe(art));
 }
 
 static void append_classpath(hashley::rowan &done, sim_sb *classpath,
