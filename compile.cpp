@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #define SIM_IMPLEMENTATION
 #include "../leco/sim.hpp"
@@ -76,7 +77,10 @@ static void find_dep_path(sim_sb *path, const cavan::dep &d) {
   }
 }
 
-static void run_java(cavan::deps &deps) {
+static auto build_javac(cavan::deps &deps) {
+  hai::varray<hai::cstr> args{10240};
+  args.push_back("javac"_s.cstr());
+
   for (auto &d : deps) {
     if (d.scp != "compile"_s)
       continue;
@@ -84,16 +88,33 @@ static void run_java(cavan::deps &deps) {
     sim_sbt path{};
     find_dep_path(&path, d);
 
-    puts(path.buffer);
+    args.push_back("-cp"_s.cstr());
+    args.push_back(jute::view::unsafe(path.buffer).cstr());
   }
+
+  return args;
 }
 
-int main() try {
+static void run(hai::varray<hai::cstr> &args) {
+  hai::array<char *> argv{args.size() + 1};
+  for (auto i = 0; i < args.size(); i++) {
+    argv[i] = args[i].begin();
+  }
+  execvp(argv[0], argv.begin());
+}
+
+int main(int argc, char **argv) try {
   yoyo::file_reader::open("pom.xml")
       .fmap(cavan::read_tokens)
       .fpeek(cavan::lint_xml)
       .fmap(cavan::list_deps)
-      .map(run_java)
+      .map(build_javac)
+      .peek([&](auto &args) {
+        for (auto i = 1; i < argc; i++) {
+          args.push_back(jute::view::unsafe(argv[i]).cstr());
+        }
+      })
+      .map(run)
       .log_error([] { throw 1; });
 } catch (...) {
   return 1;
