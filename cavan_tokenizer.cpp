@@ -31,6 +31,10 @@ static auto read_end_tag(const char *&b) {
   });
 }
 
+static auto read_comment(const char *&b) {
+  return read_tag(b).peek([](auto &t) { t = {}; });
+}
+
 static auto read_text(const char *&b) {
   const char *start = b;
   while (*b && *b != '<') {
@@ -48,6 +52,17 @@ static auto read_text(const char *&b) {
   return mno::req{token{id.cstr(), T_TEXT}};
 }
 
+static auto read_tagish(const char *&b) {
+  switch (b[1]) {
+  case '/':
+    return read_end_tag(b);
+  case '!':
+    return read_comment(b);
+  default:
+    return read_tag(b);
+  }
+}
+
 mno::req<tokens> split_tokens(const hai::cstr &cstr) {
   const char *buffer = cstr.begin();
 
@@ -57,7 +72,7 @@ mno::req<tokens> split_tokens(const hai::cstr &cstr) {
 
     switch (*buffer) {
     case '<':
-      t = (buffer[1] == '/') ? read_end_tag(buffer) : read_tag(buffer);
+      t = read_tagish(buffer);
       break;
     case ' ':
     case '\t':
