@@ -102,6 +102,7 @@ mno::req<deps> list_deps(const tokens &ts) {
         },
         res, dep);
   }
-  return mno::req<deps>::failed("missing </dependencies>");
+  return res.is_valid() ? mno::req<deps>::failed("missing </dependencies>")
+                        : traits::move(res);
 }
 } // namespace cavan
