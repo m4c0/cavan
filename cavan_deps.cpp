@@ -59,7 +59,7 @@ namespace cavan {
     } else if (match(*t, T_CLOSE_TAG, "dependency")) {
       break;
     } else {
-      res = mno::req<void>::failed("unknown stuff found inside depencies");
+      res = mno::req<void>::failed("unknown stuff found inside dependencies");
     }
     if (!res.is_valid())
       return res.map([] { return dep{}; });
