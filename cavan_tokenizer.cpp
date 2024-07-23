@@ -18,10 +18,12 @@ static auto read_tag(const char *&b) {
     if (blank(end))
       break;
 
+  auto type = (b[-1] == '/') ? T_TAG : T_OPEN_TAG;
+
   b++; // consume '>'
 
   auto id = jute::view{start + 1, static_cast<unsigned>(end - start - 1)};
-  return mno::req{token{id.cstr(), T_OPEN_TAG}};
+  return mno::req{token{id.cstr(), type}};
 }
 
 static auto read_end_tag(const char *&b) {
