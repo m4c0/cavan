@@ -119,19 +119,36 @@ static void run(hai::varray<hai::cstr> &args) {
   execvp(argv[0], argv.begin());
 }
 
-int main(int argc, char **argv) try {
-  yoyo::file_reader::open("pom.xml")
+static void compile(const char *pom, jute::view src) {
+  yoyo::file_reader::open(pom)
       .fmap(cavan::read_tokens)
       .fpeek(cavan::lint_xml)
       .fmap(cavan::list_deps)
       .map(build_javac)
-      .peek([&](auto &args) {
-        for (auto i = 1; i < argc; i++) {
-          args.push_back(jute::view::unsafe(argv[i]).cstr());
-        }
-      })
+      .peek([&](auto &args) { args.push_back(src.cstr()); })
       .map(run)
       .log_error([] { throw 1; });
+}
+
+int main(int argc, char **argv) try {
+  if (argc != 2) {
+    fprintf(stderr, "usage: compile.exe <java-file>");
+    return 1;
+  }
+
+  sim_sbt file{};
+  sim_sb_path_copy_real(&file, argv[1]);
+  while (file.len > 1) {
+    sim_sb_path_parent(&file);
+    sim_sb_path_parent(&file);
+    sim_sb_path_append(&file, "pom.xml");
+
+    if (mtime::of(file.buffer) > 0) {
+      compile(file.buffer, jute::view::unsafe(argv[1]));
+    }
+  }
+
+  return 1;
 } catch (...) {
   return 1;
 }
