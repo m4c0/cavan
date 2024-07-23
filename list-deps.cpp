@@ -6,6 +6,12 @@ import traits;
 import yoyo;
 import silog;
 
+static void usage() {
+  // TODO: document usage
+  silog::log(silog::error, "invalid usage");
+  throw 1;
+}
+
 struct token {
   hai::cstr id{};
 };
@@ -17,11 +23,6 @@ static auto take(const char *&buffer, char c) {
 
   buffer++;
   return mno::req{};
-}
-
-static void usage() {
-  silog::log(silog::error, "invalid usage");
-  throw 1;
 }
 
 static auto read_tag(const char *&b) {
