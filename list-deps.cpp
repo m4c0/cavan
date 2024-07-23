@@ -19,6 +19,7 @@ enum type {
   T_CLOSE_TAG,
   T_TAG,
   T_TEXT,
+  T_END,
 };
 struct token {
   hai::cstr id{};
@@ -104,7 +105,18 @@ static auto split_tokens(const hai::cstr &cstr) {
         },
         ts, t);
   }
-  return ts;
+  return ts.peek([](auto &ts) { ts.push_back_doubling(token{{}, T_END}); });
+}
+
+void list_deps(const token *t) {
+  using namespace jute::literals;
+
+  int count{};
+  for (; t->type != T_END; t++) {
+    if (t->type == T_OPEN_TAG && "dependency"_s == t->id)
+      count++;
+  }
+  silog::log(silog::debug, "found %d dependencies", count);
 }
 
 int main(int argc, char **argv) try {
@@ -131,12 +143,10 @@ int main(int argc, char **argv) try {
         silog::log(silog::info, "read %d bytes", buffer.size());
       })
       .fmap(split_tokens)
-      .map([](auto &tokens) {
+      .peek([](auto &tokens) {
         silog::log(silog::info, "got %d tokens", tokens.size());
-        for (auto &t : tokens) {
-          silog::log(silog::info, "-- %d [%s]", t.type, t.id.begin());
-        }
       })
+      .map([](auto &tokens) { list_deps(tokens.begin()); })
       .log_error([] { throw 1; });
 } catch (...) {
   return 1;
