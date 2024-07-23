@@ -29,6 +29,9 @@ namespace cavan {
       res = take_tag("version", t, &d.ver);
     } else if (match(*t, T_OPEN_TAG, "scope")) {
       res = take_tag("scope", t, &d.scp);
+    } else if (match(*t, T_OPEN_TAG, "optional")) {
+      hai::cstr tmp{100};
+      res = take_tag("scope", t, &tmp).map([&] { d.opt = "true"_s == tmp; });
     } else if (match(*t, T_CLOSE_TAG, "dependency")) {
       break;
     } else {

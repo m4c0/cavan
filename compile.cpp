@@ -73,6 +73,8 @@ static void find_dep_path(sim_sb *path, const cavan::dep &d) {
 static void append_classpath(hashley::rowan &done, sim_sb *classpath,
                              const cavan::deps &deps) {
   for (auto &d : deps) {
+    if (d.opt)
+      continue;
     if (d.scp != "compile"_s)
       continue;
 

@@ -29,6 +29,7 @@ export struct dep {
   hai::cstr art{};
   hai::cstr ver{};
   hai::cstr scp{"compile"_s.cstr()};
+  bool opt{};
 };
 export using deps = hai::varray<dep>;
 
