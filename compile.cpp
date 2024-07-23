@@ -77,10 +77,7 @@ static void find_dep_path(sim_sb *path, const cavan::dep &d) {
   }
 }
 
-static auto build_javac(cavan::deps &deps) {
-  sim_sbt classpath{102400};
-  sim_sb_copy(&classpath, "target/classes");
-
+static void append_classpath(sim_sb *classpath, const cavan::deps &deps) {
   for (auto &d : deps) {
     if (d.scp != "compile"_s)
       continue;
@@ -88,9 +85,22 @@ static auto build_javac(cavan::deps &deps) {
     sim_sbt path{};
     find_dep_path(&path, d);
 
-    sim_sb_concat(&classpath, ":");
-    sim_sb_concat(&classpath, path.buffer);
+    sim_sb_concat(classpath, ":");
+    sim_sb_concat(classpath, path.buffer);
+
+    sim_sb_path_set_extension(&path, "pom");
+    yoyo::file_reader::open(path.buffer)
+        .fmap(cavan::read_tokens)
+        .fmap(cavan::list_deps)
+        .map([&](auto &deps) { append_classpath(classpath, deps); })
+        .take([](auto) { /* assume all deps are correct */ });
   }
+}
+
+static auto build_javac(const cavan::deps &deps) {
+  sim_sbt classpath{102400};
+  sim_sb_copy(&classpath, "target/classes");
+  append_classpath(&classpath, deps);
 
   hai::varray<hai::cstr> args{10240};
   args.push_back("javac"_s.cstr());
