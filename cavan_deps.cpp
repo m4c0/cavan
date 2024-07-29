@@ -1,8 +1,8 @@
 module cavan;
 
 namespace cavan {
-[[nodiscard]] static mno::req<void> take_tag(jute::view exp_id, const token *&t,
-                                             hai::cstr *out) {
+[[nodiscard]] mno::req<void> take_tag(jute::view exp_id, const token *&t,
+                                      hai::cstr *out) {
   t++;
   if (!match(*t, T_TEXT))
     return mno::req<void>::failed("expecting text inside tag");

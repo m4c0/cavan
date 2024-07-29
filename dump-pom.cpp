@@ -26,6 +26,10 @@ int main(int argc, char **argv) try {
           .fpeek(cavan::lint_xml)
           .fmap(cavan::parse_pom)
           .map([](auto &pom) {
+            silog::log(silog::info, "name: %s:%s:%s", pom.grp.begin(),
+                       pom.art.begin(), pom.ver.begin());
+            silog::log(silog::info, "parent: %s:%s:%s", pom.parent.grp.begin(),
+                       pom.parent.art.begin(), pom.parent.ver.begin());
             silog::log(silog::info, "found %d dependencies", pom.deps.size());
             silog::log(silog::info, "found %d managed dependencies",
                        pom.deps_mgmt.size());
