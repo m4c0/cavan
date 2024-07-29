@@ -24,8 +24,10 @@ int main(int argc, char **argv) try {
       yoyo::file_reader::open(val)
           .fmap(cavan::read_tokens)
           .fpeek(cavan::lint_xml)
-          .fmap(cavan::list_deps)
-          .map([](auto &deps) {
+          .fmap(cavan::parse_pom)
+          .map([](auto &pom) {
+            auto &deps = pom.deps;
+
             silog::log(silog::info, "found %d dependencies", deps.size());
 
             for (auto &d : deps) {

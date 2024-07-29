@@ -121,4 +121,25 @@ mno::req<deps> list_deps(const tokens &ts) {
   return res.is_valid() ? mno::req<deps>::failed("missing </dependencies>")
                         : traits::move(res);
 }
+
+mno::req<deps> list_deps(const token *&t) {
+  mno::req<deps> res{deps{128}};
+  for (; t->type != T_END && res.is_valid(); t++) {
+    if (match(*t, T_CLOSE_TAG, "dependencies"))
+      return res;
+
+    if (!match(*t, T_OPEN_TAG, "dependency"))
+      continue;
+
+    auto dep = take_dep(++t);
+    res = mno::combine(
+        [](auto &ds, auto &d) {
+          ds.push_back_doubling(d);
+          return traits::move(ds);
+        },
+        res, dep);
+  }
+  return res.is_valid() ? mno::req<deps>::failed("missing </dependencies>")
+                        : traits::move(res);
+}
 } // namespace cavan

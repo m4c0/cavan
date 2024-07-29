@@ -109,9 +109,9 @@ find_dep_path(sim_sb *path, const char *grp, const char *art, const char *ver) {
                      return yoyo::file_reader::open(path.buffer);
                    })
                    .fmap(cavan::read_tokens)
-                   .fmap(cavan::list_deps)
-                   .fmap([&](auto &deps) {
-                     return append_classpath(done, classpath, &d, deps);
+                   .fmap(cavan::parse_pom)
+                   .fmap([&](auto &pom) {
+                     return append_classpath(done, classpath, &d, pom.deps);
                    });
     if (!res.is_valid())
       return res.trace("traversing "_hs + jute::view::unsafe(key.buffer));
@@ -119,12 +119,12 @@ find_dep_path(sim_sb *path, const char *grp, const char *art, const char *ver) {
   return {};
 }
 
-static auto build_javac(const cavan::deps &deps) {
+static auto build_javac(const cavan::pom &pom) {
   hashley::rowan done{};
 
   sim_sbt classpath{102400};
   sim_sb_copy(&classpath, "target/classes");
-  return append_classpath(done, &classpath, nullptr, deps).map([&] {
+  return append_classpath(done, &classpath, nullptr, pom.deps).map([&] {
     hai::varray<hai::cstr> args{10240};
     args.push_back("javac"_s.cstr());
     args.push_back("-d"_s.cstr());
@@ -147,7 +147,7 @@ static void compile(const char *pom, jute::view src) {
   yoyo::file_reader::open(pom)
       .fmap(cavan::read_tokens)
       .fpeek(cavan::lint_xml)
-      .fmap(cavan::list_deps)
+      .fmap(cavan::parse_pom)
       .fmap(build_javac)
       .peek([&](auto &args) { args.push_back(src.cstr()); })
       .map(run)

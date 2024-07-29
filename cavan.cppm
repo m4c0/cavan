@@ -63,7 +63,7 @@ export [[nodiscard]] mno::req<tokens> read_tokens(yoyo::reader &r);
 export [[nodiscard]] mno::req<void> lint_tag(const token *&t);
 export [[nodiscard]] mno::req<void> lint_xml(const tokens &tokens);
 
-export [[nodiscard]] mno::req<deps> list_deps(const tokens &ts);
+export [[nodiscard]] mno::req<deps> list_deps(const token *&t);
 
 export [[nodiscard]] mno::req<pom> parse_pom(const tokens &tokens);
 } // namespace cavan
