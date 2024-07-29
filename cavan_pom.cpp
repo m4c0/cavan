@@ -1,3 +1,6 @@
+module;
+extern "C" char *getenv(const char *);
+
 module cavan;
 import silog;
 
@@ -53,4 +56,30 @@ mno::req<cavan::pom> cavan::parse_pom(const cavan::tokens &ts) {
       res.ver = jute::view{res.parent.ver}.cstr();
     return traits::move(res);
   });
+}
+
+mno::req<cavan::pom> cavan::read_pom(jute::view grp, jute::view art,
+                                     jute::view ver) {
+  if (grp == "" || art == "" || ver == "")
+    return mno::req<cavan::pom>::failed("missing identifier");
+
+  auto home_env = getenv("HOME");
+  if (!home_env)
+    return mno::req<cavan::pom>::failed("missing HOME environment variable");
+
+  auto grp_path = grp.cstr();
+  for (auto &c : grp_path)
+    if (c == '.')
+      c = '/';
+
+  auto home = jute::view::unsafe(home_env);
+  auto pom_file = home + "/.m2/repository/" + grp_path + "/" + art + "/" + ver +
+                  "/" + art + "-" + ver + ".pom";
+
+  return yoyo::file_reader::open(pom_file.cstr().begin())
+      .fmap(cavan::read_tokens)
+      .fpeek(cavan::lint_xml)
+      .fmap(cavan::parse_pom)
+      .peek([&](auto &pom) { pom.filename = pom_file.cstr(); })
+      .trace("parsing "_s + pom_file.cstr());
 }

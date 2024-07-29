@@ -38,6 +38,8 @@ export struct dep {
 export using deps = hai::varray<dep>;
 
 export struct pom {
+  hai::cstr filename{};
+
   hai::cstr grp{};
   hai::cstr art{};
   hai::cstr ver{};
@@ -93,4 +95,7 @@ export [[nodiscard]] mno::req<void> lint_xml(const tokens &tokens);
 export [[nodiscard]] mno::req<deps> list_deps(const token *&t);
 
 export [[nodiscard]] mno::req<pom> parse_pom(const tokens &tokens);
+
+export [[nodiscard]] mno::req<pom> read_pom(jute::view grp, jute::view art,
+                                            jute::view ver);
 } // namespace cavan
