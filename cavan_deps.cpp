@@ -75,71 +75,17 @@ namespace cavan {
   return mno::req{traits::move(d)};
 }
 
-mno::req<deps> list_deps(const tokens &ts) {
-  auto *t = ts.begin();
-
-  for (; t->type != T_END; t++) {
-    if (match(*t, T_OPEN_TAG, "profiles")) {
-      while (!match(*t, T_CLOSE_TAG, "profiles"))
-        t++;
-      continue;
-    }
-    if (match(*t, T_OPEN_TAG, "plugin")) {
-      while (!match(*t, T_CLOSE_TAG, "plugin"))
-        t++;
-      continue;
-    }
-    if (match(*t, T_OPEN_TAG, "dependencyManagement")) {
-      while (!match(*t, T_CLOSE_TAG, "dependencyManagement"))
-        t++;
-      continue;
-    }
-
-    if (match(*t, T_OPEN_TAG, "dependencies"))
-      break;
-  }
-  // No <dependencies>
-  if (match(*t, T_END))
-    return mno::req<deps>{};
-
-  mno::req<deps> res{deps{128}};
-  for (; t->type != T_END && res.is_valid(); t++) {
-    if (match(*t, T_CLOSE_TAG, "dependencies"))
-      return res;
-
-    if (!match(*t, T_OPEN_TAG, "dependency"))
-      continue;
-
-    auto dep = take_dep(++t);
-    res = mno::combine(
-        [](auto &ds, auto &d) {
-          ds.push_back_doubling(d);
-          return traits::move(ds);
-        },
-        res, dep);
-  }
-  return res.is_valid() ? mno::req<deps>::failed("missing </dependencies>")
-                        : traits::move(res);
-}
-
 mno::req<deps> list_deps(const token *&t) {
-  mno::req<deps> res{deps{128}};
-  for (; t->type != T_END && res.is_valid(); t++) {
-    if (match(*t, T_CLOSE_TAG, "dependencies"))
-      return res;
+  deps res{128};
+  return take_if(t, "dependencies",
+                 [&] {
+                   if (!match(*t, T_OPEN_TAG, "dependency"))
+                     return mno::req{};
 
-    if (!match(*t, T_OPEN_TAG, "dependency"))
-      continue;
-
-    auto dep = take_dep(++t);
-    res = mno::combine(
-        [](auto &ds, auto &d) {
-          ds.push_back_doubling(d);
-          return traits::move(ds);
-        },
-        res, dep);
-  }
-  return res.is_valid() ? mno::req<deps>::failed("missing </dependencies>")
-                        : traits::move(res);
+                   return take_dep(++t).map(
+                       [&](auto &d) { res.push_back_doubling(d); });
+                 })
+      .map([&] { return traits::move(res); });
+  ;
 }
 } // namespace cavan
