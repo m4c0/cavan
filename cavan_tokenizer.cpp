@@ -41,7 +41,24 @@ static auto read_directive(const char *&b) {
 }
 
 static auto read_comment(const char *&b) {
-  return read_tag(b).peek([](auto &t) { t = {}; });
+  jute::view prefix{b, 4};
+  if (prefix != "<!--")
+    return mno::req<token>::failed("could not get comment opening around ["_s +
+                                   prefix + "]");
+
+  b += 3;
+  while (*++b) {
+    if (*b != '-')
+      continue;
+
+    if (jute::view{b, 3} != "-->")
+      continue;
+
+    b += 3;
+    return mno::req{token{}};
+  }
+
+  return mno::req<token>::failed("missing end of comment");
 }
 
 static auto read_text(const char *&b) {
