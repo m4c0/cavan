@@ -16,7 +16,8 @@ mno::req<void> lint_tag(const token *&t) {
     }
 
     if (match(*t, T_CLOSE_TAG))
-      return mno::req<void>::failed("mismatched close tag");
+      return mno::req<void>::failed("mismated close tag - expecting: "_s +
+                                    t->id + ", got: " + id);
 
     if (match(*t, T_OPEN_TAG)) {
       auto res = lint_tag(t);
@@ -25,7 +26,7 @@ mno::req<void> lint_tag(const token *&t) {
       continue;
     }
   }
-  return mno::req<void>::failed("missing close tag");
+  return mno::req<void>::failed("missing close tag for "_s + id);
 }
 
 mno::req<void> lint_xml(const cavan::tokens &tokens) {
