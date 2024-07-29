@@ -89,6 +89,11 @@ mno::req<deps> list_deps(const tokens &ts) {
         t++;
       continue;
     }
+    if (match(*t, T_OPEN_TAG, "dependencyManagement")) {
+      while (!match(*t, T_CLOSE_TAG, "dependencyManagement"))
+        t++;
+      continue;
+    }
 
     if (match(*t, T_OPEN_TAG, "dependencies"))
       break;
