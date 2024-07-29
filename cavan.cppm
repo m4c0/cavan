@@ -18,6 +18,7 @@ export enum type {
   T_CLOSE_TAG,
   T_TAG,
   T_TEXT,
+  T_DIRECTIVE,
   T_END,
 };
 export struct token {

@@ -33,6 +33,13 @@ static auto read_end_tag(const char *&b) {
   });
 }
 
+static auto read_directive(const char *&b) {
+  return read_tag(b).peek([](auto &t) {
+    t.id = jute::view{t.id}.subview(1).after.cstr();
+    t.type = T_DIRECTIVE;
+  });
+}
+
 static auto read_comment(const char *&b) {
   return read_tag(b).peek([](auto &t) { t = {}; });
 }
@@ -56,6 +63,8 @@ static auto read_text(const char *&b) {
 
 static auto read_tagish(const char *&b) {
   switch (b[1]) {
+  case '?':
+    return read_directive(b);
   case '/':
     return read_end_tag(b);
   case '!':

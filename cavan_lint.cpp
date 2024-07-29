@@ -28,7 +28,7 @@ static mno::req<void> lint_tag(const token *&t) {
 mno::req<void> lint_xml(const cavan::tokens &tokens) {
   auto *t = tokens.begin();
 
-  if (!match(*t, T_OPEN_TAG, "?xml"))
+  if (!match(*t, T_DIRECTIVE, "xml"))
     return mno::req<void>::failed("missing <?xml?> directive");
 
   return lint_tag(++t);
