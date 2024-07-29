@@ -31,7 +31,9 @@ export struct dep {
   hai::cstr grp{};
   hai::cstr art{};
   hai::cstr ver{};
+  hai::cstr typ{"jar"_s.cstr()};
   hai::cstr scp{"compile"_s.cstr()};
+  hai::cstr cls{};
   bool opt{};
   hashley::rowan exc{};
 };

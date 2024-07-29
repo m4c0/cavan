@@ -55,11 +55,9 @@ namespace cavan {
       hai::cstr tmp{100};
       res = take_tag("optional", t, &tmp).map([&] { d.opt = "true"_s == tmp; });
     } else if (match(*t, T_OPEN_TAG, "classifier")) {
-      hai::cstr tmp{100};
-      res = take_tag("classifier", t, &tmp);
+      res = take_tag("classifier", t, &d.cls);
     } else if (match(*t, T_OPEN_TAG, "type")) {
-      hai::cstr tmp{100};
-      res = take_tag("type", t, &tmp);
+      res = take_tag("type", t, &d.typ);
     } else if (match(*t, T_OPEN_TAG, "exclusions")) {
       res = take_exclusions(t, d.exc);
     } else if (match(*t, T_CLOSE_TAG, "dependency")) {
