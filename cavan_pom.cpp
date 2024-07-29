@@ -27,7 +27,7 @@ static mno::req<void> parse_project(const cavan::token *&t, cavan::pom &res) {
       if (match(*t, T_OPEN_TAG, "version"))
         return take_tag("version", t, &res.parent.ver);
 
-      return mno::req<void>::failed("unknown tag inside <parent>");
+      return lint_tag(t);
     });
 
   if (match(*t, T_OPEN_TAG, "dependencyManagement")) {
