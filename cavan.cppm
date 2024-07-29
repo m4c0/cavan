@@ -52,9 +52,34 @@ export struct pom {
   cavan::deps deps_mgmt{};
 };
 
-export bool match(const token &t, type tp) { return t.type == tp; }
-export bool match(const token &t, type tp, jute::view id) {
+[[nodiscard]] constexpr bool match(const token &t, type tp) {
+  return t.type == tp;
+}
+[[nodiscard]] constexpr bool match(const token &t, type tp, jute::view id) {
   return t.type == tp && t.id == id;
+}
+[[nodiscard]] mno::req<void> take_if(const token *&t, jute::view id,
+                                     auto &&fn) {
+  if (!match(*t, T_OPEN_TAG, id))
+    return {};
+
+  t++;
+  for (; !match(*t, T_END) && !match(*t, T_CLOSE_TAG, id); t++) {
+    mno::req<void> res = fn();
+    if (!res.is_valid())
+      return res;
+  }
+
+  if (!match(*t, T_CLOSE_TAG, id))
+    return mno::req<void>::failed("missing end of " + id);
+
+  return {};
+}
+[[nodiscard]] mno::req<void> take(const token *&t, jute::view id, auto &&fn) {
+  if (!match(*t, T_OPEN_TAG, id))
+    return mno::req<void>::failed("missing expected tag " + id);
+
+  return take_if(t, id, fn);
 }
 
 export [[nodiscard]] mno::req<tokens> split_tokens(const hai::cstr &cstr);
