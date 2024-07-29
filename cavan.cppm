@@ -60,6 +60,7 @@ export bool match(const token &t, type tp, jute::view id) {
 export [[nodiscard]] mno::req<tokens> split_tokens(const hai::cstr &cstr);
 export [[nodiscard]] mno::req<tokens> read_tokens(yoyo::reader &r);
 
+export [[nodiscard]] mno::req<void> lint_tag(const token *&t);
 export [[nodiscard]] mno::req<void> lint_xml(const tokens &tokens);
 
 export [[nodiscard]] mno::req<deps> list_deps(const tokens &ts);

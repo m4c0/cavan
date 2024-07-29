@@ -1,7 +1,7 @@
 module cavan;
 
 namespace cavan {
-static mno::req<void> lint_tag(const token *&t) {
+mno::req<void> lint_tag(const token *&t) {
   if (!match(*t, T_OPEN_TAG))
     return mno::req<void>::failed("missing open tag");
 
