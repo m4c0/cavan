@@ -10,6 +10,7 @@
 import cavan;
 import hai;
 import hashley;
+import jojo;
 import jute;
 import mtime;
 import pprent;
@@ -143,9 +144,10 @@ static void run(hai::varray<hai::cstr> &args) {
   execvp(argv[0], argv.begin());
 }
 
-static void compile(const char *pom, jute::view src) {
-  yoyo::file_reader::open(pom)
-      .fmap(cavan::read_tokens)
+static void compile(void * src_v, hai::cstr & pom) {
+  auto src = jute::view::unsafe(static_cast<const char *>(src_v));
+
+  cavan::split_tokens(pom)
       .fpeek(cavan::lint_xml)
       .fmap(cavan::parse_pom)
       .fmap(build_javac)
@@ -168,7 +170,7 @@ int main(int argc, char **argv) try {
     sim_sb_path_append(&file, "pom.xml");
 
     if (mtime::of(file.buffer) > 0) {
-      compile(file.buffer, jute::view::unsafe(argv[1]));
+      jojo::read({ file.buffer, file.len }, argv[1], compile);
     }
   }
 
