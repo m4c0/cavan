@@ -8,41 +8,27 @@ import silog;
 static mno::req<void> parse_project(const cavan::token *&t, cavan::pom &res) {
   using namespace cavan;
 
-  if (match(*t, T_OPEN_TAG, "groupId"))
-    return take_tag("groupId", t, &res.grp);
-
-  if (match(*t, T_OPEN_TAG, "artifactId"))
-    return take_tag("artifactId", t, &res.art);
-
-  if (match(*t, T_OPEN_TAG, "version"))
-    return take_tag("version", t, &res.ver);
-
-  if (match(*t, T_OPEN_TAG, "parent"))
+  if (match(*t, T_OPEN_TAG, "groupId")) take_tag("groupId", t, &res.grp);
+  else if (match(*t, T_OPEN_TAG, "artifactId")) take_tag("artifactId", t, &res.art);
+  else if (match(*t, T_OPEN_TAG, "version")) take_tag("version", t, &res.ver);
+  else if (match(*t, T_OPEN_TAG, "parent"))
     return take_if(t, "parent", [&] {
-      if (match(*t, T_OPEN_TAG, "groupId"))
-        return take_tag("groupId", t, &res.parent.grp);
+      if (match(*t, T_OPEN_TAG, "groupId")) take_tag("groupId", t, &res.parent.grp);
+      else if (match(*t, T_OPEN_TAG, "artifactId")) take_tag("artifactId", t, &res.parent.art);
+      else if (match(*t, T_OPEN_TAG, "version")) take_tag("version", t, &res.parent.ver);
+      else lint_tag(t);
 
-      if (match(*t, T_OPEN_TAG, "artifactId"))
-        return take_tag("artifactId", t, &res.parent.art);
-
-      if (match(*t, T_OPEN_TAG, "version"))
-        return take_tag("version", t, &res.parent.ver);
-
-      lint_tag(t);
       return mno::req {};
     });
-
-  if (match(*t, T_OPEN_TAG, "dependencyManagement")) {
+  else if (match(*t, T_OPEN_TAG, "dependencyManagement")) {
     return take_if(t, "dependencyManagement", [&] {
       return list_deps(t).map(
           [&](auto &deps) { res.deps_mgmt = traits::move(deps); });
     });
-  }
-  if (match(*t, T_OPEN_TAG, "dependencies")) {
+  } else if (match(*t, T_OPEN_TAG, "dependencies")) {
     return list_deps(t).map([&](auto &deps) { res.deps = traits::move(deps); });
-  }
+  } else lint_tag(t);
 
-  lint_tag(t);
   return mno::req {};
 }
 

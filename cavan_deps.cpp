@@ -1,31 +1,27 @@
 module cavan;
+import :fail;
 
-namespace cavan {
-[[nodiscard]] mno::req<void> take_tag(jute::view exp_id, const token *&t,
-                                      hai::cstr *out) {
+using namespace cavan;
+
+void cavan::take_tag(jute::view exp_id, const token *& t, hai::cstr * out) {
   t++;
-  if (!match(*t, T_TEXT))
-    return mno::req<void>::failed("expecting text inside tag");
+  if (!match(*t, T_TEXT)) fail("expecting text inside tag");
 
-  *out = jute::view{t->id}.cstr();
+  *out = jute::view { t->id }.cstr();
 
   t++;
-  if (!match(*t, T_CLOSE_TAG, exp_id))
-    return mno::req<void>::failed("missing close tag for " + exp_id);
-
-  return mno::req{};
+  if (!match(*t, T_CLOSE_TAG, exp_id)) fail("missing close tag for " + exp_id);
 }
 
-[[nodiscard]] static mno::req<void> take_exclusions(const token *&t,
-                                                    hashley::rowan &exc) {
+[[nodiscard]] static mno::req<void> take_exclusions(const token *&t, hashley::rowan &exc) {
   hai::cstr grp{};
   hai::cstr art{};
   mno::req<void> res{};
   for (; !match(*t, T_END); t++) {
     if (match(*t, T_OPEN_TAG, "groupId")) {
-      res = take_tag("groupId", t, &grp);
+      take_tag("groupId", t, &grp);
     } else if (match(*t, T_OPEN_TAG, "artifactId")) {
-      res = take_tag("artifactId", t, &art);
+      take_tag("artifactId", t, &art);
     } else if (match(*t, T_CLOSE_TAG, "exclusion")) {
       auto key = ""_hs + grp + ":" + art + "\0";
       exc[(*key).begin()] = 1;
@@ -44,20 +40,21 @@ namespace cavan {
   for (; t->type != T_END; t++) {
     mno::req<void> res{};
     if (match(*t, T_OPEN_TAG, "groupId")) {
-      res = take_tag("groupId", t, &d.grp);
+      take_tag("groupId", t, &d.grp);
     } else if (match(*t, T_OPEN_TAG, "artifactId")) {
-      res = take_tag("artifactId", t, &d.art);
+      take_tag("artifactId", t, &d.art);
     } else if (match(*t, T_OPEN_TAG, "version")) {
-      res = take_tag("version", t, &d.ver);
+      take_tag("version", t, &d.ver);
     } else if (match(*t, T_OPEN_TAG, "scope")) {
-      res = take_tag("scope", t, &d.scp);
+      take_tag("scope", t, &d.scp);
     } else if (match(*t, T_OPEN_TAG, "optional")) {
       hai::cstr tmp{100};
-      res = take_tag("optional", t, &tmp).map([&] { d.opt = "true"_s == tmp; });
+      take_tag("optional", t, &tmp);
+      res = res.map([&] { d.opt = "true"_s == tmp; });
     } else if (match(*t, T_OPEN_TAG, "classifier")) {
-      res = take_tag("classifier", t, &d.cls);
+      take_tag("classifier", t, &d.cls);
     } else if (match(*t, T_OPEN_TAG, "type")) {
-      res = take_tag("type", t, &d.typ);
+      take_tag("type", t, &d.typ);
     } else if (match(*t, T_OPEN_TAG, "exclusions")) {
       res = take_exclusions(t, d.exc);
     } else if (match(*t, T_CLOSE_TAG, "dependency")) {
@@ -73,7 +70,7 @@ namespace cavan {
   return mno::req{traits::move(d)};
 }
 
-mno::req<deps> list_deps(const token *&t) {
+mno::req<deps> cavan::list_deps(const token *&t) {
   deps res{128};
   return take_if(t, "dependencies",
                  [&] {
@@ -86,4 +83,3 @@ mno::req<deps> list_deps(const token *&t) {
       .map([&] { return traits::move(res); });
   ;
 }
-} // namespace cavan

@@ -64,8 +64,8 @@ export struct pom {
 [[nodiscard]] constexpr bool match(const token &t, type tp, jute::view id) {
   return t.type == tp && t.id == id;
 }
-[[nodiscard]] mno::req<void> take_tag(jute::view exp_id, const token *&t,
-                                      hai::cstr *out);
+
+void take_tag(jute::view exp_id, const token *&t, hai::cstr *out);
 [[nodiscard]] mno::req<void> take_if(const token *&t, jute::view id,
                                      auto &&fn) {
   if (!match(*t, T_OPEN_TAG, id))
