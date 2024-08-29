@@ -75,11 +75,10 @@ void take_if(const token *& t, jute::view id, auto && fn) {
 
   if (!match(*t, T_CLOSE_TAG, id)) fail("missing end of " + id);
 }
-[[nodiscard]] mno::req<void> take(const token *&t, jute::view id, auto &&fn) {
+void take(const token *& t, jute::view id, auto && fn) {
   if (!match(*t, T_OPEN_TAG, id)) fail("missing expected tag " + id);
 
   take_if(t, id, fn);
-  return {};
 }
 
 export [[nodiscard]] tokens split_tokens(const hai::cstr &cstr);

@@ -36,13 +36,11 @@ mno::req<cavan::pom> cavan::parse_pom(const cavan::tokens &ts) {
     return mno::req<pom>::failed("missing <?xml?> directive");
 
   cavan::pom res{};
-  return take(t, "project", [&] { return parse_project(t, res); }).map([&] {
-    if (res.grp.size() == 0)
-      res.grp = jute::view{res.parent.grp}.cstr();
-    if (res.ver.size() == 0)
-      res.ver = jute::view{res.parent.ver}.cstr();
-    return traits::move(res);
-  });
+  take(t, "project", [&] { parse_project(t, res).log_error(); });
+
+  if (res.grp.size() == 0) res.grp = jute::view { res.parent.grp }.cstr();
+  if (res.ver.size() == 0) res.ver = jute::view { res.parent.ver }.cstr();
+  return mno::req { traits::move(res) };
 }
 
 mno::req<cavan::pom> cavan::read_pom(jute::view grp, jute::view art,
