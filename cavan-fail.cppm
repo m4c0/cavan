@@ -3,7 +3,7 @@ import jute;
 import silog;
 
 namespace cavan {
-  struct error {};
+  export struct error {};
 
   inline void fail(const char * msg) {
     silog::log(silog::error, "Failed to tokenise: %s", msg);

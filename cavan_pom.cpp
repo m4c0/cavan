@@ -12,18 +12,15 @@ static mno::req<void> parse_project(const cavan::token *&t, cavan::pom &res) {
   else if (match(*t, T_OPEN_TAG, "artifactId")) take_tag("artifactId", t, &res.art);
   else if (match(*t, T_OPEN_TAG, "version")) take_tag("version", t, &res.ver);
   else if (match(*t, T_OPEN_TAG, "parent"))
-    return take_if(t, "parent", [&] {
+    take_if(t, "parent", [&] {
       if (match(*t, T_OPEN_TAG, "groupId")) take_tag("groupId", t, &res.parent.grp);
       else if (match(*t, T_OPEN_TAG, "artifactId")) take_tag("artifactId", t, &res.parent.art);
       else if (match(*t, T_OPEN_TAG, "version")) take_tag("version", t, &res.parent.ver);
       else lint_tag(t);
-
-      return mno::req {};
     });
   else if (match(*t, T_OPEN_TAG, "dependencyManagement")) {
-    return take_if(t, "dependencyManagement", [&] {
-      return list_deps(t).map(
-          [&](auto &deps) { res.deps_mgmt = traits::move(deps); });
+    take_if(t, "dependencyManagement", [&] {
+      list_deps(t).map( [&](auto &deps) { res.deps_mgmt = traits::move(deps); }).log_error();
     });
   } else if (match(*t, T_OPEN_TAG, "dependencies")) {
     return list_deps(t).map([&](auto &deps) { res.deps = traits::move(deps); });

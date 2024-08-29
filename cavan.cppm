@@ -3,6 +3,7 @@
 #pragma leco add_impl cavan_pom
 #pragma leco add_impl cavan_tokenizer
 export module cavan;
+import :fail;
 import jute;
 import hai;
 import hashley;
@@ -12,7 +13,7 @@ import yoyo;
 using namespace jute::literals;
 
 namespace cavan {
-export struct error {};
+export struct error;
 
 export enum type {
   T_NULL,
@@ -66,28 +67,19 @@ export struct pom {
 }
 
 void take_tag(jute::view exp_id, const token *&t, hai::cstr *out);
-[[nodiscard]] mno::req<void> take_if(const token *&t, jute::view id,
-                                     auto &&fn) {
-  if (!match(*t, T_OPEN_TAG, id))
-    return {};
+void take_if(const token *& t, jute::view id, auto && fn) {
+  if (!match(*t, T_OPEN_TAG, id)) return;
 
   t++;
-  for (; !match(*t, T_END) && !match(*t, T_CLOSE_TAG, id); t++) {
-    mno::req<void> res = fn();
-    if (!res.is_valid())
-      return res;
-  }
+  for (; !match(*t, T_END) && !match(*t, T_CLOSE_TAG, id); t++) fn();
 
-  if (!match(*t, T_CLOSE_TAG, id))
-    return mno::req<void>::failed("missing end of " + id);
-
-  return {};
+  if (!match(*t, T_CLOSE_TAG, id)) fail("missing end of " + id);
 }
 [[nodiscard]] mno::req<void> take(const token *&t, jute::view id, auto &&fn) {
-  if (!match(*t, T_OPEN_TAG, id))
-    return mno::req<void>::failed("missing expected tag " + id);
+  if (!match(*t, T_OPEN_TAG, id)) fail("missing expected tag " + id);
 
-  return take_if(t, id, fn);
+  take_if(t, id, fn);
+  return {};
 }
 
 export [[nodiscard]] tokens split_tokens(const hai::cstr &cstr);

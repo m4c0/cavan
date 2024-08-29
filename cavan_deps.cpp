@@ -69,16 +69,12 @@ static dep take_dep(const token *& t) try {
   throw;
 }
 
-mno::req<deps> cavan::list_deps(const token *&t) {
-  deps res{128};
-  return take_if(t, "dependencies",
-                 [&] {
-                   if (!match(*t, T_OPEN_TAG, "dependency"))
-                     return mno::req{};
+mno::req<deps> cavan::list_deps(const token *& t) {
+  deps res { 128 };
+  take_if(t, "dependencies", [&] {
+    if (!match(*t, T_OPEN_TAG, "dependency")) return;
 
-                   res.push_back_doubling(take_dep(++t));
-                   return mno::req {};
-                 })
-      .map([&] { return traits::move(res); });
-  ;
+    res.push_back_doubling(take_dep(++t));
+  });
+  return mno::req { traits::move(res) };
 }
