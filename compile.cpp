@@ -107,9 +107,8 @@ find_dep_path(sim_sb *path, const char *grp, const char *art, const char *ver) {
                      sim_sb_concat(classpath, path.buffer);
 
                      sim_sb_path_set_extension(&path, "pom");
-                     return yoyo::file_reader::open(path.buffer);
+                     return cavan::split_tokens(jojo::read_cstr({ path.buffer, path.len }));
                    })
-                   .fmap(cavan::read_tokens)
                    .fmap(cavan::parse_pom)
                    .fmap([&](auto &pom) {
                      return append_classpath(done, classpath, &d, pom.deps);
