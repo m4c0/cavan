@@ -89,7 +89,6 @@ export struct pom {
 }
 
 export [[nodiscard]] mno::req<tokens> split_tokens(const hai::cstr &cstr);
-export [[nodiscard]] mno::req<tokens> read_tokens(yoyo::reader &r);
 
 export [[nodiscard]] mno::req<void> lint_tag(const token *&t);
 export [[nodiscard]] mno::req<void> lint_xml(const tokens &tokens);
