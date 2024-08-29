@@ -38,7 +38,6 @@ static dep take_dep(const token *& t) try {
   dep d {};
 
   for (; t->type != T_END; t++) {
-    mno::req<void> res {};
     if (match(*t, T_OPEN_TAG, "groupId")) {
       take_tag("groupId", t, &d.grp);
     } else if (match(*t, T_OPEN_TAG, "artifactId")) {
@@ -50,7 +49,7 @@ static dep take_dep(const token *& t) try {
     } else if (match(*t, T_OPEN_TAG, "optional")) {
       hai::cstr tmp { 100 };
       take_tag("optional", t, &tmp);
-      res = res.map([&] { d.opt = "true"_s == tmp; });
+      d.opt = "true"_s == tmp;
     } else if (match(*t, T_OPEN_TAG, "classifier")) {
       take_tag("classifier", t, &d.cls);
     } else if (match(*t, T_OPEN_TAG, "type")) {

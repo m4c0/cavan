@@ -7,8 +7,6 @@ import :fail;
 import jute;
 import hai;
 import hashley;
-import missingno;
-import yoyo;
 
 using namespace jute::literals;
 

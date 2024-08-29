@@ -5,7 +5,7 @@ module cavan;
 import jojo;
 import silog;
 
-static mno::req<void> parse_project(const cavan::token *& t, cavan::pom & res) {
+static void parse_project(const cavan::token *& t, cavan::pom & res) {
   using namespace cavan;
 
   if (match(*t, T_OPEN_TAG, "groupId")) take_tag("groupId", t, &res.grp);
@@ -22,8 +22,6 @@ static mno::req<void> parse_project(const cavan::token *& t, cavan::pom & res) {
     take_if(t, "dependencyManagement", [&] { res.deps_mgmt = list_deps(t); });
   } else if (match(*t, T_OPEN_TAG, "dependencies")) res.deps = list_deps(t);
   else lint_tag(t);
-
-  return mno::req {};
 }
 
 cavan::pom cavan::parse_pom(const cavan::tokens & ts) {
@@ -32,7 +30,7 @@ cavan::pom cavan::parse_pom(const cavan::tokens & ts) {
   if (!match(*t++, T_DIRECTIVE, "xml")) fail("missing <?xml?> directive");
 
   cavan::pom res {};
-  take(t, "project", [&] { parse_project(t, res).log_error(); });
+  take(t, "project", [&] { parse_project(t, res); });
 
   if (res.grp.size() == 0) res.grp = jute::view { res.parent.grp }.cstr();
   if (res.ver.size() == 0) res.ver = jute::view { res.parent.ver }.cstr();
