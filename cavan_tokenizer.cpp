@@ -1,6 +1,14 @@
 module cavan;
+import silog;
 
 namespace cavan {
+static inline void fail(const char * msg) {
+  silog::log(silog::error, "Failed to tokenise: %s", msg);
+  throw error {};
+}
+template<auto N>
+static inline void fail(jute::twine<N> msg) { fail(msg.cstr().begin()); }
+
 static auto blank(const char *c) {
   return *c == ' ' || *c == '\t' || *c == '\n' || *c == '\r';
 }
@@ -10,8 +18,7 @@ static auto read_tag(const char *&b) {
   while (*b && *b != '>')
     b++;
 
-  if (!*b)
-    return mno::req<token>::failed("expecting '>' got EOF");
+  if (!*b) fail("expecting '>' got EOF");
 
   const char *end;
   for (end = start; end < b; end++)
@@ -23,28 +30,26 @@ static auto read_tag(const char *&b) {
   b++; // consume '>'
 
   auto id = jute::view{start + 1, static_cast<unsigned>(end - start - 1)};
-  return mno::req{token{id.cstr(), type}};
+  return token { id.cstr(), type };
 }
 
 static auto read_end_tag(const char *&b) {
-  return read_tag(b).peek([](auto &t) {
-    t.id = jute::view{t.id}.subview(1).after.cstr();
-    t.type = T_CLOSE_TAG;
-  });
+  auto t = read_tag(b);
+  t.id = jute::view{t.id}.subview(1).after.cstr();
+  t.type = T_CLOSE_TAG;
+  return t;
 }
 
 static auto read_directive(const char *&b) {
-  return read_tag(b).peek([](auto &t) {
-    t.id = jute::view{t.id}.subview(1).after.cstr();
-    t.type = T_DIRECTIVE;
-  });
+  auto t = read_tag(b);
+  t.id = jute::view{t.id}.subview(1).after.cstr();
+  t.type = T_DIRECTIVE;
+  return t;
 }
 
 static auto read_comment(const char *&b) {
   jute::view prefix{b, 4};
-  if (prefix != "<!--")
-    return mno::req<token>::failed("could not get comment opening around ["_s +
-                                   prefix + "]");
+  if (prefix != "<!--") fail("could not get comment opening around ["_s + prefix + "]");
 
   b += 3;
   while (*++b) {
@@ -55,10 +60,11 @@ static auto read_comment(const char *&b) {
       continue;
 
     b += 3;
-    return mno::req{token{}};
+    return token {};
   }
 
-  return mno::req<token>::failed("missing end of comment");
+  fail("missing end of comment");
+  return token {};
 }
 
 static auto read_text(const char *&b) {
@@ -71,11 +77,10 @@ static auto read_text(const char *&b) {
   while (blank(end) && end > start)
     end--;
 
-  if (end == start)
-    return mno::req<token>{};
+  if (end == start) return token {};
 
   auto id = jute::view{start, static_cast<unsigned>(end - start)};
-  return mno::req{token{id.cstr(), T_TEXT}};
+  return token { id.cstr(), T_TEXT };
 }
 
 static auto read_tagish(const char *&b) {
@@ -91,12 +96,12 @@ static auto read_tagish(const char *&b) {
   }
 }
 
-mno::req<tokens> split_tokens(const hai::cstr &cstr) {
+tokens split_tokens(const hai::cstr &cstr) {
   const char *buffer = cstr.begin();
 
-  mno::req<tokens> ts{tokens{1024}};
-  while (*buffer && ts.is_valid()) {
-    mno::req<token> t{};
+  tokens ts { 1024 };
+  while (*buffer) {
+    token t {};
 
     switch (*buffer) {
     case '<':
@@ -113,14 +118,10 @@ mno::req<tokens> split_tokens(const hai::cstr &cstr) {
       break;
     }
 
-    ts = mno::combine(
-        [](auto &ts, auto &t) {
-          if (t.type != T_NULL)
-            ts.push_back_doubling(traits::move(t));
-          return traits::move(ts);
-        },
-        ts, t);
+    if (t.type != T_NULL) ts.push_back_doubling(traits::move(t));
   }
-  return ts.peek([](auto &ts) { ts.push_back_doubling(token{{}, T_END}); });
+  
+  ts.push_back_doubling(token { {}, T_END });
+  return ts;
 }
 } // namespace cavan

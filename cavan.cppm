@@ -12,6 +12,8 @@ import yoyo;
 using namespace jute::literals;
 
 namespace cavan {
+export struct error {};
+
 export enum type {
   T_NULL,
   T_OPEN_TAG,
@@ -88,7 +90,7 @@ export struct pom {
   return take_if(t, id, fn);
 }
 
-export [[nodiscard]] mno::req<tokens> split_tokens(const hai::cstr &cstr);
+export [[nodiscard]] tokens split_tokens(const hai::cstr &cstr);
 
 export [[nodiscard]] mno::req<void> lint_tag(const token *&t);
 export [[nodiscard]] mno::req<void> lint_xml(const tokens &tokens);
