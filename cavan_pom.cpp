@@ -77,7 +77,7 @@ mno::req<cavan::pom> cavan::read_pom(jute::view grp, jute::view art,
   auto pom_file = home + "/.m2/repository/" + grp_path + "/" + art + "/" + ver +
                   "/" + art + "-" + ver + ".pom";
 
-  return split_tokens(jojo::read_cstr(pom_file.cstr()))
+  return mno::req { split_tokens(jojo::read_cstr(pom_file.cstr())) }
       .fpeek(cavan::lint_xml)
       .fmap(cavan::parse_pom)
       .peek([&](auto &pom) { pom.filename = pom_file.cstr(); })

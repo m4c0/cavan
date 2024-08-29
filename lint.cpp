@@ -7,7 +7,7 @@ import jute;
 using namespace cavan;
 
 static void lint(void *, hai::cstr & xml) {
-  split_tokens(xml).fmap(cavan::lint_xml).log_error([] { throw 1; });
+  lint_xml(split_tokens(xml)).log_error([] { throw 1; });
 }
 
 int main(int argc, char ** argv) try {

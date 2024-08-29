@@ -4,13 +4,14 @@ import cavan;
 import hai;
 import jojo;
 import jute;
+import missingno;
 import silog;
 
 using namespace cavan;
 using namespace jute::literals;
 
 static void list_deps(void *, hai::cstr & xml) {
-  split_tokens(xml)
+  mno::req { split_tokens(xml) }
       .fpeek(cavan::lint_xml)
       .fmap(cavan::parse_pom)
       .map([](auto & pom) {

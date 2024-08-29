@@ -102,7 +102,7 @@ find_dep_path(sim_sb *path, const char *grp, const char *art, const char *ver) {
 
     sim_sbt path{};
     auto res = find_dep_path(&path, grp, art, ver)
-                   .fmap([&] {
+                   .map([&] {
                      sim_sb_concat(classpath, ":");
                      sim_sb_concat(classpath, path.buffer);
 
@@ -146,7 +146,7 @@ static void run(hai::varray<hai::cstr> &args) {
 static void compile(void * src_v, hai::cstr & pom) {
   auto src = jute::view::unsafe(static_cast<const char *>(src_v));
 
-  cavan::split_tokens(pom)
+  mno::req { cavan::split_tokens(pom) }
       .fpeek(cavan::lint_xml)
       .fmap(cavan::parse_pom)
       .fmap(build_javac)
