@@ -12,23 +12,19 @@ using namespace cavan;
 using namespace jute::literals;
 
 static void dump_pom(void *, hai::cstr & xml) {
-  mno::req { split_tokens(xml) }
-      .peek(cavan::lint_xml)
-      .map(cavan::parse_pom)
-      .until_failure(
-          [](auto & pom) {
-            silog::log(silog::info, "filename: %s", pom.filename.begin());
-            silog::log(silog::info, "name: %s:%s:%s", pom.grp.begin(), pom.art.begin(), pom.ver.begin());
-            silog::log(silog::info, "parent: %s:%s:%s", pom.parent.grp.begin(), pom.parent.art.begin(),
-                       pom.parent.ver.begin());
-            silog::log(silog::info, "found %d dependencies", pom.deps.size());
-            silog::log(silog::info, "found %d managed dependencies", pom.deps_mgmt.size());
+  auto tokens = cavan::split_tokens(xml);
+  cavan::lint_xml(tokens);
 
-            return cavan::read_pom(pom.parent.grp, pom.parent.art, pom.parent.ver);
-          },
-          [](auto) { return true; })
-      .map([](auto &) {})
-      .log_error([] { throw 1; });
+  auto pom = cavan::parse_pom(tokens);
+  while (true) {
+    silog::log(silog::info, "filename: %s", pom.filename.begin());
+    silog::log(silog::info, "name: %s:%s:%s", pom.grp.begin(), pom.art.begin(), pom.ver.begin());
+    silog::log(silog::info, "parent: %s:%s:%s", pom.parent.grp.begin(), pom.parent.art.begin(), pom.parent.ver.begin());
+    silog::log(silog::info, "found %d dependencies", pom.deps.size());
+    silog::log(silog::info, "found %d managed dependencies", pom.deps_mgmt.size());
+
+    pom = cavan::read_pom(pom.parent.grp, pom.parent.art, pom.parent.ver);
+  }
 }
 
 int main(int argc, char ** argv) try {

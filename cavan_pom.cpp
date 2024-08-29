@@ -5,7 +5,7 @@ module cavan;
 import jojo;
 import silog;
 
-static mno::req<void> parse_project(const cavan::token *&t, cavan::pom &res) {
+static mno::req<void> parse_project(const cavan::token *& t, cavan::pom & res) {
   using namespace cavan;
 
   if (match(*t, T_OPEN_TAG, "groupId")) take_tag("groupId", t, &res.grp);
@@ -39,27 +39,26 @@ cavan::pom cavan::parse_pom(const cavan::tokens & ts) {
   return res;
 }
 
-mno::req<cavan::pom> cavan::read_pom(jute::view grp, jute::view art,
-                                     jute::view ver) {
-  if (grp == "" || art == "" || ver == "")
-    return mno::req<cavan::pom>::failed("missing identifier");
+cavan::pom cavan::read_pom(jute::view grp, jute::view art, jute::view ver) try {
+  if (grp == "" || art == "" || ver == "") fail("missing identifier");
 
   auto home_env = getenv("HOME");
-  if (!home_env)
-    return mno::req<cavan::pom>::failed("missing HOME environment variable");
+  if (!home_env) fail("missing HOME environment variable");
 
   auto grp_path = grp.cstr();
-  for (auto &c : grp_path)
-    if (c == '.')
-      c = '/';
+  for (auto & c : grp_path)
+    if (c == '.') c = '/';
 
   auto home = jute::view::unsafe(home_env);
-  auto pom_file = home + "/.m2/repository/" + grp_path + "/" + art + "/" + ver +
-                  "/" + art + "-" + ver + ".pom";
+  auto pom_file = home + "/.m2/repository/" + grp_path + "/" + art + "/" + ver + "/" + art + "-" + ver + ".pom";
 
-  return mno::req { split_tokens(jojo::read_cstr(pom_file.cstr())) }
-      .peek(cavan::lint_xml)
-      .map(cavan::parse_pom)
-      .peek([&](auto &pom) { pom.filename = pom_file.cstr(); })
-      .trace("parsing "_s + pom_file.cstr());
+  auto tokens = split_tokens(jojo::read_cstr(pom_file.cstr()));
+  lint_xml(tokens);
+
+  auto pom = parse_pom(tokens);
+  pom.filename = pom_file.cstr();
+  return pom;
+} catch (...) {
+  silog::log(silog::info, "while parsing POM of %s:%s:%s", grp.cstr().begin(), art.cstr().begin(), ver.cstr().begin());
+  throw;
 }
