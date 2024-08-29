@@ -2,6 +2,7 @@ module;
 extern "C" char *getenv(const char *);
 
 module cavan;
+import jojo;
 import silog;
 
 static mno::req<void> parse_project(const cavan::token *&t, cavan::pom &res) {
@@ -76,8 +77,7 @@ mno::req<cavan::pom> cavan::read_pom(jute::view grp, jute::view art,
   auto pom_file = home + "/.m2/repository/" + grp_path + "/" + art + "/" + ver +
                   "/" + art + "-" + ver + ".pom";
 
-  return yoyo::file_reader::open(pom_file.cstr().begin())
-      .fmap(cavan::read_tokens)
+  return split_tokens(jojo::read_cstr(pom_file.cstr()))
       .fpeek(cavan::lint_xml)
       .fmap(cavan::parse_pom)
       .peek([&](auto &pom) { pom.filename = pom_file.cstr(); })
