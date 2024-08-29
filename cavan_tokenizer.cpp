@@ -1,14 +1,7 @@
 module cavan;
-import silog;
+import :fail;
 
 namespace cavan {
-static inline void fail(const char * msg) {
-  silog::log(silog::error, "Failed to tokenise: %s", msg);
-  throw error {};
-}
-template<auto N>
-static inline void fail(jute::twine<N> msg) { fail(msg.cstr().begin()); }
-
 static auto blank(const char *c) {
   return *c == ' ' || *c == '\t' || *c == '\n' || *c == '\r';
 }

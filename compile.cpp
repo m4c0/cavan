@@ -147,7 +147,7 @@ static void compile(void * src_v, hai::cstr & pom) {
   auto src = jute::view::unsafe(static_cast<const char *>(src_v));
 
   mno::req { cavan::split_tokens(pom) }
-      .fpeek(cavan::lint_xml)
+      .peek(cavan::lint_xml)
       .fmap(cavan::parse_pom)
       .fmap(build_javac)
       .peek([&](auto &args) { args.push_back(src.cstr()); })

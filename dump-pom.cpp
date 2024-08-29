@@ -13,7 +13,7 @@ using namespace jute::literals;
 
 static void dump_pom(void *, hai::cstr & xml) {
   mno::req { split_tokens(xml) }
-      .fpeek(cavan::lint_xml)
+      .peek(cavan::lint_xml)
       .fmap(cavan::parse_pom)
       .until_failure(
           [](auto & pom) {

@@ -92,8 +92,8 @@ export struct pom {
 
 export [[nodiscard]] tokens split_tokens(const hai::cstr &cstr);
 
-export [[nodiscard]] mno::req<void> lint_tag(const token *&t);
-export [[nodiscard]] mno::req<void> lint_xml(const tokens &tokens);
+export void lint_tag(const token *& t);
+export void lint_xml(const tokens & tokens);
 
 export [[nodiscard]] mno::req<deps> list_deps(const token *&t);
 

@@ -28,7 +28,8 @@ static mno::req<void> parse_project(const cavan::token *&t, cavan::pom &res) {
       if (match(*t, T_OPEN_TAG, "version"))
         return take_tag("version", t, &res.parent.ver);
 
-      return lint_tag(t);
+      lint_tag(t);
+      return mno::req {};
     });
 
   if (match(*t, T_OPEN_TAG, "dependencyManagement")) {
@@ -40,7 +41,9 @@ static mno::req<void> parse_project(const cavan::token *&t, cavan::pom &res) {
   if (match(*t, T_OPEN_TAG, "dependencies")) {
     return list_deps(t).map([&](auto &deps) { res.deps = traits::move(deps); });
   }
-  return lint_tag(t);
+
+  lint_tag(t);
+  return mno::req {};
 }
 
 mno::req<cavan::pom> cavan::parse_pom(const cavan::tokens &ts) {
@@ -78,7 +81,7 @@ mno::req<cavan::pom> cavan::read_pom(jute::view grp, jute::view art,
                   "/" + art + "-" + ver + ".pom";
 
   return mno::req { split_tokens(jojo::read_cstr(pom_file.cstr())) }
-      .fpeek(cavan::lint_xml)
+      .peek(cavan::lint_xml)
       .fmap(cavan::parse_pom)
       .peek([&](auto &pom) { pom.filename = pom_file.cstr(); })
       .trace("parsing "_s + pom_file.cstr());
