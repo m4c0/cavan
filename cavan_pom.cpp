@@ -37,6 +37,12 @@ cavan::pom cavan::parse_pom(const cavan::tokens & ts) {
   return res;
 }
 
+cavan::pom cavan::read_pom(const hai::cstr & xml) {
+  auto tokens = split_tokens(xml);
+  lint_xml(tokens);
+  return parse_pom(tokens);
+}
+
 cavan::pom cavan::read_pom(jute::view grp, jute::view art, jute::view ver) try {
   if (grp == "" || art == "" || ver == "") fail("missing identifier");
 
@@ -50,10 +56,7 @@ cavan::pom cavan::read_pom(jute::view grp, jute::view art, jute::view ver) try {
   auto home = jute::view::unsafe(home_env);
   auto pom_file = home + "/.m2/repository/" + grp_path + "/" + art + "/" + ver + "/" + art + "-" + ver + ".pom";
 
-  auto tokens = split_tokens(jojo::read_cstr(pom_file.cstr()));
-  lint_xml(tokens);
-
-  auto pom = parse_pom(tokens);
+  auto pom = read_pom(jojo::read_cstr(pom_file.cstr()));
   pom.filename = pom_file.cstr();
   return pom;
 } catch (...) {

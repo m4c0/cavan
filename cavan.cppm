@@ -87,5 +87,6 @@ export void lint_xml(const tokens & tokens);
 export [[nodiscard]] deps list_deps(const token *& t);
 
 export [[nodiscard]] pom parse_pom(const tokens & tokens);
+export [[nodiscard]] pom read_pom(const hai::cstr & xml);
 export [[nodiscard]] pom read_pom(jute::view grp, jute::view art, jute::view ver);
 } // namespace cavan
