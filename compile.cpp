@@ -109,7 +109,7 @@ find_dep_path(sim_sb *path, const char *grp, const char *art, const char *ver) {
                      sim_sb_path_set_extension(&path, "pom");
                      return cavan::split_tokens(jojo::read_cstr({ path.buffer, path.len }));
                    })
-                   .fmap(cavan::parse_pom)
+                   .map(cavan::parse_pom)
                    .fmap([&](auto &pom) {
                      return append_classpath(done, classpath, &d, pom.deps);
                    });
@@ -148,7 +148,7 @@ static void compile(void * src_v, hai::cstr & pom) {
 
   mno::req { cavan::split_tokens(pom) }
       .peek(cavan::lint_xml)
-      .fmap(cavan::parse_pom)
+      .map(cavan::parse_pom)
       .fmap(build_javac)
       .peek([&](auto &args) { args.push_back(src.cstr()); })
       .map(run)

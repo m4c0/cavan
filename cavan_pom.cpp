@@ -1,5 +1,5 @@
 module;
-extern "C" char *getenv(const char *);
+extern "C" char * getenv(const char *);
 
 module cavan;
 import jojo;
@@ -26,18 +26,17 @@ static mno::req<void> parse_project(const cavan::token *&t, cavan::pom &res) {
   return mno::req {};
 }
 
-mno::req<cavan::pom> cavan::parse_pom(const cavan::tokens &ts) {
-  auto *t = ts.begin();
+cavan::pom cavan::parse_pom(const cavan::tokens & ts) {
+  auto * t = ts.begin();
 
-  if (!match(*t++, T_DIRECTIVE, "xml"))
-    return mno::req<pom>::failed("missing <?xml?> directive");
+  if (!match(*t++, T_DIRECTIVE, "xml")) fail("missing <?xml?> directive");
 
-  cavan::pom res{};
+  cavan::pom res {};
   take(t, "project", [&] { parse_project(t, res).log_error(); });
 
   if (res.grp.size() == 0) res.grp = jute::view { res.parent.grp }.cstr();
   if (res.ver.size() == 0) res.ver = jute::view { res.parent.ver }.cstr();
-  return mno::req { traits::move(res) };
+  return res;
 }
 
 mno::req<cavan::pom> cavan::read_pom(jute::view grp, jute::view art,
@@ -60,7 +59,7 @@ mno::req<cavan::pom> cavan::read_pom(jute::view grp, jute::view art,
 
   return mno::req { split_tokens(jojo::read_cstr(pom_file.cstr())) }
       .peek(cavan::lint_xml)
-      .fmap(cavan::parse_pom)
+      .map(cavan::parse_pom)
       .peek([&](auto &pom) { pom.filename = pom_file.cstr(); })
       .trace("parsing "_s + pom_file.cstr());
 }

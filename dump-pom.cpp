@@ -14,7 +14,7 @@ using namespace jute::literals;
 static void dump_pom(void *, hai::cstr & xml) {
   mno::req { split_tokens(xml) }
       .peek(cavan::lint_xml)
-      .fmap(cavan::parse_pom)
+      .map(cavan::parse_pom)
       .until_failure(
           [](auto & pom) {
             silog::log(silog::info, "filename: %s", pom.filename.begin());
