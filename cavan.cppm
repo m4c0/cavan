@@ -81,12 +81,12 @@ void take(const token *& t, jute::view id, auto && fn) {
   take_if(t, id, fn);
 }
 
-export [[nodiscard]] tokens split_tokens(const hai::cstr &cstr);
+export [[nodiscard]] tokens split_tokens(const hai::cstr & cstr);
 
 export void lint_tag(const token *& t);
 export void lint_xml(const tokens & tokens);
 
-export [[nodiscard]] mno::req<deps> list_deps(const token *&t);
+export [[nodiscard]] deps list_deps(const token *& t);
 
 export [[nodiscard]] mno::req<pom> parse_pom(const tokens &tokens);
 

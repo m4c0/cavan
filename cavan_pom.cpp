@@ -19,12 +19,9 @@ static mno::req<void> parse_project(const cavan::token *&t, cavan::pom &res) {
       else lint_tag(t);
     });
   else if (match(*t, T_OPEN_TAG, "dependencyManagement")) {
-    take_if(t, "dependencyManagement", [&] {
-      list_deps(t).map( [&](auto &deps) { res.deps_mgmt = traits::move(deps); }).log_error();
-    });
-  } else if (match(*t, T_OPEN_TAG, "dependencies")) {
-    return list_deps(t).map([&](auto &deps) { res.deps = traits::move(deps); });
-  } else lint_tag(t);
+    take_if(t, "dependencyManagement", [&] { res.deps_mgmt = list_deps(t); });
+  } else if (match(*t, T_OPEN_TAG, "dependencies")) res.deps = list_deps(t);
+  else lint_tag(t);
 
   return mno::req {};
 }
