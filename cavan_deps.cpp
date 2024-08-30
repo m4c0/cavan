@@ -52,6 +52,7 @@ static dep take_dep(const token *& t) try {
       d.opt = "true"_s == tmp;
     } else if (match(*t, T_OPEN_TAG, "classifier")) {
       take_tag("classifier", t, &d.cls);
+    } else if (match(*t, T_TAG, "classifier")) {
     } else if (match(*t, T_OPEN_TAG, "type")) {
       take_tag("type", t, &d.typ);
     } else if (match(*t, T_OPEN_TAG, "exclusions")) {
