@@ -58,14 +58,13 @@ static dep take_dep(const token *& t) try {
       take_exclusions(t, d.exc);
     } else if (match(*t, T_CLOSE_TAG, "dependency")) {
       break;
-    } else fail("unknown stuff found inside dependencies");
+    } else fail("unknown stuff found inside dependencies around "_s + t->id);
   }
 
   // silog::log(silog::debug, "dependency: %s:%s:%s:%s", grp, art, ver, scp);
   return d;
 } catch (...) {
-  silog::log(silog::info, "while parsing dependency");
-  throw;
+  whilst("parsing dependency");
 }
 
 deps cavan::list_deps(const token *& t) {
