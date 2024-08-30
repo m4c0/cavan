@@ -6,7 +6,7 @@ namespace cavan {
   export struct error {};
 
   inline void fail(const char * msg) {
-    silog::log(silog::error, "Failed to tokenise: %s", msg);
+    silog::log(silog::error, "%s", msg);
     throw error {};
   }
 
