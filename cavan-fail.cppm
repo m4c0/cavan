@@ -2,8 +2,8 @@ export module cavan:fail;
 import jute;
 import silog;
 
-namespace cavan {
-  export struct error {};
+export namespace cavan {
+  struct error {};
 
   [[noreturn]] inline void fail(const char * msg) {
     silog::log(silog::error, "%s", msg);

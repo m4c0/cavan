@@ -3,7 +3,7 @@
 #pragma leco add_impl cavan_pom
 #pragma leco add_impl cavan_tokenizer
 export module cavan;
-import :fail;
+export import :fail;
 import jute;
 import hai;
 import hashley;
