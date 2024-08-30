@@ -1,6 +1,4 @@
 #pragma leco tool
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -143,37 +141,18 @@ static void run(hai::varray<hai::cstr> &args) {
   execvp(argv[0], argv.begin());
 }
 
-static void compile(void * src_v, hai::cstr & pom) {
-  auto src = jute::view::unsafe(static_cast<const char *>(src_v));
+static void compile_with_efpom(char * fname, char * efpom) {
+  auto src = jute::view::unsafe(static_cast<const char *>(fname));
 
-  mno::req { cavan::split_tokens(pom) }
-      .peek(cavan::lint_xml)
-      .map(cavan::parse_pom)
-      .fmap(build_javac)
-      .peek([&](auto &args) { args.push_back(src.cstr()); })
-      .map(run)
-      .log_error([] { throw 1; });
+  auto pom = cavan::read_pom(jojo::read_cstr(jute::view::unsafe(efpom)));
+  return build_javac(pom).peek([&](auto & args) { args.push_back(src.cstr()); }).map(run).log_error([] { throw 1; });
 }
 
-int main(int argc, char **argv) try {
-  if (argc != 2) {
-    fprintf(stderr, "usage: compile.exe <java-file>");
-    return 1;
-  }
+int main(int argc, char ** argv) try {
+  // TODO: generate effective-pom
+  if (argc != 3) cavan::fail("usage: compile.exe <java-file> <effective-pom>");
 
-  sim_sbt file{};
-  sim_sb_path_copy_real(&file, argv[1]);
-  while (file.len > 1) {
-    sim_sb_path_parent(&file);
-    sim_sb_path_parent(&file);
-    sim_sb_path_append(&file, "pom.xml");
-
-    if (mtime::of(file.buffer) > 0) {
-      jojo::read({ file.buffer, file.len }, argv[1], compile);
-    }
-  }
-
-  return 1;
+  compile_with_efpom(argv[1], argv[2]);
 } catch (...) {
   return 1;
 }
