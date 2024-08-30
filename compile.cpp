@@ -1,5 +1,5 @@
 #pragma leco tool
-#include <stdio.h>
+#include <unistd.h>
 
 #define SIM_IMPLEMENTATION
 #include "../leco/sim.hpp"
@@ -7,6 +7,7 @@
 import cavan;
 import jojo;
 import jute;
+import mtime;
 
 using namespace jute::literals;
 
@@ -33,13 +34,25 @@ static auto infer_base_folder(jute::view src) {
   cavan::fail("file not in maven repo");
 }
 
-static int compile(char * fname, char * efpom) {
-  auto pom = cavan::read_pom(jojo::read_cstr(jute::view::unsafe(efpom)));
+static void create_efpom(jute::view base) {
+  // TODO: generate effective-pom using cavan
 
+  chdir(base.cstr().begin());
+
+  const auto cmd = "mvn -q -nsu -o -B help:effective-pom -Dverbose=true -Doutput=target/cavan-compile.pom";
+  if (0 != system(cmd)) cavan::fail("maven failed");
+}
+
+static int compile(char * fname) {
   auto src = jute::view::unsafe(fname);
   auto base = infer_base_folder(src);
   auto tgt = base + "/target/classes";
-  auto tmpnam = (base + "/target/cavan-compile").cstr();
+  auto efpom = (base + "/target/cavan-compile.pom").cstr();
+  auto tmpnam = (base + "/target/cavan-compile.args").cstr();
+
+  if (mtime::of(efpom.begin()) == 0) create_efpom(base);
+
+  auto pom = cavan::read_pom(jojo::read_cstr(efpom));
 
   jojo::write(tmpnam, "-d "_hs + tgt + "\n");
   jojo::append(tmpnam, "-cp "_hs + tgt);
@@ -67,10 +80,9 @@ static int compile(char * fname, char * efpom) {
 }
 
 int main(int argc, char ** argv) try {
-  // TODO: generate effective-pom
-  if (argc != 3) cavan::fail("usage: compile.exe <java-file> <effective-pom>");
+  if (argc != 2) cavan::fail("usage: compile.exe <java-file>");
 
-  return compile(argv[1], argv[2]);
+  return compile(argv[1]);
 } catch (...) {
   return 1;
 }
