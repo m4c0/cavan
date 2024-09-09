@@ -7,22 +7,21 @@ import hai;
 import hashley;
 import silog;
 
-struct dd {
-  hai::cstr grp {};
-  hai::cstr art {};
-  hai::cstr ver {};
-  unsigned depth {};
-};
-class dep_map {
-  hai::varray<dd> m_bucket { 1024000 };
+class kvmap {
+  struct kv {
+    hai::cstr key {};
+    hai::cstr val {};
+    unsigned depth {};
+  };
+
+  hai::varray<kv> m_bucket { 1024000 };
   hashley::rowan m_deps {};
 
 public:
-  void take(jute::view grp, jute::view art, jute::view ver, unsigned depth) {
-    auto id = (grp + ":" + art).cstr();
-    auto & idx = m_deps[id.begin()];
+  void take(jute::view key, jute::view val, unsigned depth) {
+    auto & idx = m_deps[key.cstr().begin()];
     if (idx == 0) {
-      m_bucket.push_back(dd { grp.cstr(), art.cstr(), ver.cstr(), depth });
+      m_bucket.push_back(kv { key.cstr(), val.cstr(), depth });
       idx = m_bucket.size();
       return;
     }
@@ -30,19 +29,33 @@ public:
     auto & dd = m_bucket[idx - 1];
     if (dd.depth <= depth) return;
 
-    dd.ver = ver.cstr();
+    dd.val = val.cstr();
     dd.depth = depth;
   }
 
-  [[nodiscard]] jute::view version_of(jute::view grp, jute::view art) const {
-    auto id = (grp + ":" + art).cstr();
-    auto idx = m_deps[id.begin()];
+  [[nodiscard]] jute::view operator[](jute::view key) const {
+    auto idx = m_deps[key.cstr().begin()];
     if (idx == 0) return "TBD";
-    return m_bucket[idx - 1].ver;
+    return m_bucket[idx - 1].val;
   }
 
   [[nodiscard]] auto begin() const { return m_bucket.begin(); }
   [[nodiscard]] auto end() const { return m_bucket.end(); }
+};
+class dep_map : kvmap {
+public:
+  using kvmap::begin;
+  using kvmap::end;
+  using kvmap::operator[];
+
+  void take(jute::view grp, jute::view art, jute::view ver, unsigned depth) {
+    auto key = grp + ":" + art;
+    kvmap::take(key.cstr(), ver, depth);
+  }
+  [[nodiscard]] jute::view version_of(jute::view grp, jute::view art) const {
+    auto key = grp + ":" + art;
+    return kvmap::operator[](key.cstr());
+  }
 };
 
 static dep_map g_dep_map {};
@@ -65,9 +78,9 @@ static void run(void *, hai::cstr & xml) {
   auto pom = cavan::read_pom(xml);
   parse_parent(&pom, 1);
 
-  for (auto & d : g_dep_map) {
-    jute::view ver = (d.ver.size() == 0) ? g_dep_mgmt_map.version_of(d.grp, d.art) : d.ver;
-    silog::log(silog::info, "dependency %s:%s:%s", d.grp.begin(), d.art.begin(), ver.cstr().begin());
+  for (auto & [k, v, _] : g_dep_map) {
+    jute::view ver = (v.size() == 0) ? g_dep_mgmt_map[k] : v;
+    silog::log(silog::info, "dependency %s:%s", k.begin(), ver.cstr().begin());
   }
 }
 
