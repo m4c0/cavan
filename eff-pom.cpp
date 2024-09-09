@@ -82,7 +82,7 @@ static void run(void *, hai::cstr & xml) {
 
   for (auto & [k, v, _] : g_dep_map) {
     jute::view ver = (v.size() == 0) ? g_dep_mgmt_map[k] : v;
-    if (ver.size() > 3 && ver[0] == '$' && ver[1] == '{' && ver[ver.size() - 1] == '}') {
+    while (ver.size() > 3 && ver[0] == '$' && ver[1] == '{' && ver[ver.size() - 1] == '}') {
       auto prop = ver.subview(2, ver.size() - 3).middle;
       ver = g_props[prop];
     }
