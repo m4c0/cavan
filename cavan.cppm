@@ -40,6 +40,12 @@ export struct dep {
 };
 export using deps = hai::varray<dep>;
 
+export struct prop {
+  hai::cstr key {};
+  hai::cstr val {};
+};
+export using props = hai::varray<prop>;
+
 export struct pom {
   hai::cstr filename{};
 
@@ -55,6 +61,7 @@ export struct pom {
 
   cavan::deps deps{};
   cavan::deps deps_mgmt{};
+  cavan::props props {};
 };
 
 [[nodiscard]] constexpr bool match(const token &t, type tp) {

@@ -5,6 +5,24 @@ module cavan;
 import jojo;
 import silog;
 
+static cavan::props list_props(const cavan::token *& t) {
+  cavan::props res { 100 };
+  take_if(t, "properties", [&] {
+    if (!match(*t, cavan::T_OPEN_TAG)) return;
+
+    jute::view key = t->id;
+    t++;
+
+    if (!match(*t, cavan::T_TEXT)) return;
+    jute::view val = t->id;
+
+    if (!match(*t, cavan::T_CLOSE_TAG, key)) return;
+
+    res.push_back_doubling(cavan::prop { key.cstr(), val.cstr() });
+  });
+  return res;
+}
+
 static void parse_project(const cavan::token *& t, cavan::pom & res) {
   using namespace cavan;
 
@@ -18,9 +36,10 @@ static void parse_project(const cavan::token *& t, cavan::pom & res) {
       else if (match(*t, T_OPEN_TAG, "version")) take_tag("version", t, &res.parent.ver);
       else lint_tag(t);
     });
-  else if (match(*t, T_OPEN_TAG, "dependencyManagement")) {
+  else if (match(*t, T_OPEN_TAG, "dependencyManagement"))
     take_if(t, "dependencyManagement", [&] { res.deps_mgmt = list_deps(t); });
-  } else if (match(*t, T_OPEN_TAG, "dependencies")) res.deps = list_deps(t);
+  else if (match(*t, T_OPEN_TAG, "dependencies")) res.deps = list_deps(t);
+  else if (match(*t, T_OPEN_TAG, "properties")) res.props = list_props(t);
   else lint_tag(t);
 }
 
