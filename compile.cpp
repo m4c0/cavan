@@ -57,9 +57,14 @@ static int compile(char * fname) {
   jojo::write(tmpnam, "-d "_hs + tgt + "\n");
   jojo::append(tmpnam, "-cp "_hs + tgt);
 
+  bool test_scope = strstr(fname, "src/test/");
+
   for (auto & d : pom.deps) {
     if (d.cls != "jar"_s && d.cls != ""_s) continue;
-    if (d.scp != "compile"_s) continue;
+    if (test_scope && d.scp != "test"_s && d.scp != "compile"_s) continue;
+    if (!test_scope && d.scp != "compile"_s) continue;
+
+    // TODO: traverse deps
 
     sim_sbt grp {};
     sim_sb_copy(&grp, d.grp.begin());
