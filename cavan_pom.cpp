@@ -15,6 +15,7 @@ static cavan::props list_props(const cavan::token *& t) {
 
     if (!match(*t, cavan::T_TEXT)) return;
     jute::view val = t->id;
+    t++;
 
     if (!match(*t, cavan::T_CLOSE_TAG, key)) return;
 
