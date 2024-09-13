@@ -86,7 +86,7 @@ void take(const token *& t, jute::view id, auto && fn) {
   take_if(t, id, fn);
 }
 
-export [[nodiscard]] tokens split_tokens(const hai::cstr & cstr);
+export [[nodiscard]] tokens split_tokens(jute::view xml);
 
 export void lint_tag(const token *& t);
 export void lint_xml(const tokens & tokens);
