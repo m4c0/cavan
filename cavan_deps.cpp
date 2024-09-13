@@ -8,7 +8,7 @@ void cavan::take_tag(jute::view exp_id, const token *& t, hai::cstr * out) {
   t++;
   if (!match(*t, T_TEXT)) fail("expecting text inside tag");
 
-  *out = jute::view { t->id }.cstr();
+  *out = t->text.cstr();
 
   t++;
   if (!match(*t, T_CLOSE_TAG, exp_id)) fail("missing close tag for " + exp_id);
@@ -59,7 +59,7 @@ static dep take_dep(const token *& t) try {
       take_exclusions(t, d.exc);
     } else if (match(*t, T_CLOSE_TAG, "dependency")) {
       break;
-    } else fail("unknown stuff found inside dependencies around "_s + t->id);
+    } else fail("unknown stuff found inside dependencies around " + t->text);
   }
 
   // silog::log(silog::debug, "dependency: %s:%s:%s:%s", grp, art, ver, scp);

@@ -8,7 +8,7 @@ import silog;
 static cavan::props list_props(const cavan::token *& t) {
   cavan::props res { 100 };
   take_if(t, "properties", [&] {
-    jute::view key = t->id;
+    jute::view key = t->text;
 
     if (match(*t, cavan::T_TAG)) {
       res.push_back_doubling(cavan::prop { key.cstr(), {} });
@@ -19,7 +19,7 @@ static cavan::props list_props(const cavan::token *& t) {
     t++;
 
     if (!match(*t, cavan::T_TEXT)) return;
-    jute::view val = t->id;
+    jute::view val = t->text;
     t++;
 
     if (!match(*t, cavan::T_CLOSE_TAG, key)) return;

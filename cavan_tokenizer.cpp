@@ -22,20 +22,22 @@ static auto read_tag(const char *&b) {
 
   b++; // consume '>'
 
-  auto id = jute::view{start + 1, static_cast<unsigned>(end - start - 1)};
-  return token { id.cstr(), type };
+  return token {
+    .text = { start + 1, static_cast<unsigned>(end - start - 1) },
+    .type = type,
+  };
 }
 
 static auto read_end_tag(const char *&b) {
   auto t = read_tag(b);
-  t.id = jute::view{t.id}.subview(1).after.cstr();
+  t.text = t.text.subview(1).after;
   t.type = T_CLOSE_TAG;
   return t;
 }
 
 static auto read_directive(const char *&b) {
   auto t = read_tag(b);
-  t.id = jute::view{t.id}.subview(1).after.cstr();
+  t.text = t.text.subview(1).after;
   t.type = T_DIRECTIVE;
   return t;
 }
@@ -72,8 +74,10 @@ static auto read_cdata(const char *& b) {
       continue;
 
     b += 3;
-    auto id = jute::view{start, static_cast<unsigned>(b - start)};
-    return token { id.cstr(), T_TEXT };
+    return token {
+      .text = { start, static_cast<unsigned>(b - start) },
+      .type = T_TEXT,
+    };
   }
 
   fail("missing end of cdata");
@@ -101,8 +105,10 @@ static auto read_text(const char *&b) {
 
   if (end == start) return token {};
 
-  auto id = jute::view{start, static_cast<unsigned>(end - start)};
-  return token { id.cstr(), T_TEXT };
+  return token {
+    .text = { start, static_cast<unsigned>(end - start) },
+    .type = T_TEXT,
+  };
 }
 
 static auto read_tagish(const char *&b) {

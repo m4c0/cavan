@@ -23,7 +23,7 @@ export enum type {
   T_END,
 };
 export struct token {
-  hai::cstr id{};
+  jute::view text {};
   type type{};
 };
 export using tokens = hai::varray<token>;
@@ -68,7 +68,7 @@ export struct pom {
   return t.type == tp;
 }
 [[nodiscard]] constexpr bool match(const token &t, type tp, jute::view id) {
-  return t.type == tp && t.id == id;
+  return t.type == tp && t.text == id;
 }
 
 void take_tag(jute::view exp_id, const token *&t, hai::cstr *out);
