@@ -28,12 +28,12 @@ static void dump_pom(void *, hai::cstr & xml) {
 
     silog::log(silog::info, "found %d managed dependencies", pom.deps_mgmt.size());
     for (auto & d : pom.deps_mgmt) {
-      silog::log(silog::info, "- %s:%s:%s", d.grp.begin(), d.art.begin(), d.ver.begin());
+      silog::log(silog::info, "- %10s %s:%s:%s", d.scp.begin(), d.grp.begin(), d.art.begin(), d.ver.begin());
     }
 
     silog::log(silog::info, "found %d dependencies", pom.deps.size());
     for (auto & d : pom.deps) {
-      silog::log(silog::info, "- %s:%s:%s", d.grp.begin(), d.art.begin(), d.ver.begin());
+      silog::log(silog::info, "- %10s %s:%s:%s", d.scp.begin(), d.grp.begin(), d.art.begin(), d.ver.begin());
     }
 
     if (pom.parent.grp.size() == 0) break;
