@@ -97,8 +97,8 @@ static void parse_parent(cavan::pom * n, unsigned depth) {
   parse_parent(&parent, depth + 1);
 }
 
-static void run(void *, hai::cstr & xml) {
-  auto pom = cavan::read_pom(xml);
+static void run(hai::cstr xml) {
+  auto pom = cavan::read_pom(traits::move(xml));
   parse_parent(&pom, 1);
 
   for (auto & [k, v, _] : g_dep_map) {
@@ -110,7 +110,7 @@ static void run(void *, hai::cstr & xml) {
 
 int main(int argc, char ** argv) try {
   for (auto i = 1; i < argc; i++) {
-    jojo::read(jute::view::unsafe(argv[i]), nullptr, run);
+    run(jojo::read_cstr(jute::view::unsafe(argv[i])));
   }
 } catch (...) {
   return 1;

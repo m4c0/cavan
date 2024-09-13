@@ -48,6 +48,7 @@ export using props = hai::varray<prop>;
 
 export struct pom {
   hai::cstr filename{};
+  hai::cstr xml {};
 
   hai::cstr grp{};
   hai::cstr art{};
@@ -94,6 +95,6 @@ export void lint_xml(const tokens & tokens);
 export [[nodiscard]] deps list_deps(const token *& t);
 
 export [[nodiscard]] pom parse_pom(const tokens & tokens);
-export [[nodiscard]] pom read_pom(const hai::cstr & xml);
+export [[nodiscard]] pom read_pom(hai::cstr xml);
 export [[nodiscard]] pom read_pom(jute::view grp, jute::view art, jute::view ver);
 } // namespace cavan

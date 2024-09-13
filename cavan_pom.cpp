@@ -62,10 +62,12 @@ cavan::pom cavan::parse_pom(const cavan::tokens & ts) {
   return res;
 }
 
-cavan::pom cavan::read_pom(const hai::cstr & xml) {
+cavan::pom cavan::read_pom(hai::cstr xml) {
   auto tokens = split_tokens(xml);
   lint_xml(tokens);
-  return parse_pom(tokens);
+  auto pom = parse_pom(tokens);
+  pom.xml = traits::move(xml);
+  return pom;
 }
 
 cavan::pom cavan::read_pom(jute::view grp, jute::view art, jute::view ver) try {
