@@ -41,9 +41,6 @@ static auto read_directive(const char *&b) {
 }
 
 static auto read_comment(const char *&b) {
-  jute::view prefix{b, 4};
-  if (prefix != "<!--") fail("could not get comment opening around ["_s + prefix + "]");
-
   b += 3;
   while (*++b) {
     if (*b != '-')
@@ -57,6 +54,38 @@ static auto read_comment(const char *&b) {
   }
 
   fail("missing end of comment");
+  return token {};
+}
+
+static auto read_cdata(const char *& b) {
+  auto * start = b;
+
+  jute::view prefix{b, 9};
+  if (prefix != "<![CDATA[") fail("could not parse around "_s + prefix);
+
+  b += 8;
+  while (*++b) {
+    if (*b != ']')
+      continue;
+
+    if (jute::view{b, 3} != "]]>")
+      continue;
+
+    b += 3;
+    auto id = jute::view{start, static_cast<unsigned>(b - start)};
+    return token { id.cstr(), T_TEXT };
+  }
+
+  fail("missing end of cdata");
+  return token {};
+}
+
+static auto read_comment_ish(const char *& b) {
+  jute::view prefix{b, 4};
+  if (prefix == "<!--") return read_comment(b);
+  if (prefix == "<![C") return read_cdata(b);
+    
+  fail("could not parse around ["_s + prefix + "]");
   return token {};
 }
 
@@ -83,7 +112,7 @@ static auto read_tagish(const char *&b) {
   case '/':
     return read_end_tag(b);
   case '!':
-    return read_comment(b);
+    return read_comment_ish(b);
   default:
     return read_tag(b);
   }
