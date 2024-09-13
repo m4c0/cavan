@@ -73,9 +73,20 @@ static auto apply_props(jute::view ver) {
 }
 
 static void parse_parent(cavan::pom * n, unsigned depth) {
-  for (auto & d : n->deps) g_dep_map.take(d.grp, d.art, d.ver, depth);
-  for (auto & d : n->deps_mgmt) g_dep_mgmt_map.take(d.grp, d.art, d.ver, depth);
   for (auto & [k, v] : n->props) g_props.take(k, v, depth);
+  for (auto & d : n->deps) g_dep_map.take(d.grp, d.art, d.ver, depth);
+
+  for (auto & d : n->deps_mgmt) {
+    if (d.scp == "import"_s) {
+      auto ver = apply_props(d.ver);
+      silog::log(silog::debug, "importing %s:%s:%s", d.grp.begin(), d.art.begin(), ver.cstr().begin());
+
+      auto pom = cavan::read_pom(d.grp, d.art, ver);
+      parse_parent(&pom, depth + 1);
+    } else {
+      g_dep_mgmt_map.take(d.grp, d.art, d.ver, depth);
+    }
+  }
 
   auto & [grp, art, ver] = n->parent;
   if (!grp.size() && !art.size() && !ver.size()) return;
