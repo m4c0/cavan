@@ -7,6 +7,8 @@ import hai;
 import hashley;
 import silog;
 
+using namespace jute::literals;
+
 class kvmap {
   struct kv {
     hai::cstr key {};
@@ -62,6 +64,14 @@ static dep_map g_dep_map {};
 static dep_map g_dep_mgmt_map {};
 static kvmap g_props {};
 
+static auto apply_props(jute::view ver) {
+  while (ver.size() > 3 && ver[0] == '$' && ver[1] == '{' && ver[ver.size() - 1] == '}') {
+    auto prop = ver.subview(2, ver.size() - 3).middle;
+    ver = g_props[prop];
+  }
+  return ver;
+}
+
 static void parse_parent(cavan::pom * n, unsigned depth) {
   for (auto & d : n->deps) g_dep_map.take(d.grp, d.art, d.ver, depth);
   for (auto & d : n->deps_mgmt) g_dep_mgmt_map.take(d.grp, d.art, d.ver, depth);
@@ -82,11 +92,7 @@ static void run(void *, hai::cstr & xml) {
 
   for (auto & [k, v, _] : g_dep_map) {
     jute::view ver = (v.size() == 0) ? g_dep_mgmt_map[k] : v;
-    while (ver.size() > 3 && ver[0] == '$' && ver[1] == '{' && ver[ver.size() - 1] == '}') {
-      auto prop = ver.subview(2, ver.size() - 3).middle;
-      ver = g_props[prop];
-    }
-
+    ver = apply_props(ver);
     silog::log(silog::info, "dependency %s:%s", k.begin(), ver.cstr().begin());
   }
 }
