@@ -16,8 +16,9 @@ namespace cavan {
 
     [[nodiscard]] constexpr const char * pointer() const { return m_begin; }
     [[nodiscard]] constexpr jute::view look_ahead(int n) const {
-      int sz = m_begin - m_end - n;
-      return sz >= 0 ? jute::view { m_begin + n, static_cast<unsigned>(sz) } : jute::view {};
+      int rem = m_end - m_begin;
+      unsigned nn = rem > n ? n : rem;
+      return { m_begin, nn };
     }
 
     constexpr strm & operator++() {
