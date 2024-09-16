@@ -51,14 +51,14 @@ namespace cavan {
     hai::cstr filename {};
     hai::cstr xml {};
 
-    hai::cstr grp {};
-    hai::cstr art {};
-    hai::cstr ver {};
+    jute::view grp {};
+    jute::view art {};
+    jute::view ver {};
 
     struct {
-      hai::cstr grp {};
-      hai::cstr art {};
-      hai::cstr ver {};
+      jute::view grp {};
+      jute::view art {};
+      jute::view ver {};
     } parent {};
 
     cavan::deps deps {};
