@@ -30,7 +30,7 @@ static void take_exclusions(const token *& t, hashley::rowan & exc) try {
       take_tag("artifactId", t, &art);
     } else if (match(*t, T_CLOSE_TAG, "exclusion")) {
       auto key = ""_hs + grp + ":" + art + "\0";
-      exc[(*key).begin()] = 1;
+      exc[*key] = 1;
     } else if (match(*t, T_CLOSE_TAG, "exclusions")) {
       return;
     }

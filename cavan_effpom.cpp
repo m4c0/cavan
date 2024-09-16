@@ -14,7 +14,7 @@ namespace {
 
   public:
     void take(jute::view key, V val, unsigned depth) {
-      auto & idx = m_deps[key.cstr().begin()];
+      auto & idx = m_deps[key];
       if (idx == 0) {
         m_bucket.push_back(kv { key.cstr(), traits::move(val), depth });
         idx = m_bucket.size();
@@ -28,7 +28,7 @@ namespace {
       dd.depth = depth;
     };
     [[nodiscard]] jute::view operator[](jute::view key) const {
-      auto idx = m_deps[key.cstr().begin()];
+      auto idx = m_deps[key];
       if (idx == 0) return "TBD";
       return m_bucket[idx - 1].val;
     };
@@ -84,7 +84,7 @@ namespace {
     propmap m_props {};
 
     void parse_parent(const cavan::pom * n, unsigned depth) {
-      for (auto & [k, v] : n->props) m_props.take(k, jute::view { v }.cstr(), depth);
+      for (auto & [k, v] : n->props) m_props.take(k, v.cstr(), depth);
       for (auto & d : n->deps) m_dep_map.take(d.grp, d.art, d.ver, depth);
 
       for (auto & d : n->deps_mgmt) {

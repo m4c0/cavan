@@ -33,8 +33,8 @@ namespace cavan {
     jute::view grp {};
     jute::view art {};
     hai::cstr ver {};
-    jute::view typ { "jar"_s.cstr() };
-    jute::view scp { "compile"_s.cstr() };
+    jute::view typ { "jar" };
+    jute::view scp { "compile" };
     jute::view cls {};
     bool opt {};
     hashley::rowan exc {};
@@ -42,8 +42,8 @@ namespace cavan {
   export using deps = hai::varray<dep>;
 
   export struct prop {
-    hai::cstr key {};
-    hai::cstr val {};
+    jute::view key {};
+    jute::view val {};
   };
   export using props = hai::varray<prop>;
 

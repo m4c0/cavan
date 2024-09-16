@@ -11,7 +11,7 @@ static cavan::props list_props(const cavan::token *& t) {
     jute::view key = t->text;
 
     if (match(*t, cavan::T_TAG)) {
-      res.push_back_doubling(cavan::prop { key.cstr(), {} });
+      res.push_back_doubling(cavan::prop { key, {} });
       return;
     }
     if (!match(*t, cavan::T_OPEN_TAG)) return;
@@ -24,7 +24,7 @@ static cavan::props list_props(const cavan::token *& t) {
 
     if (!match(*t, cavan::T_CLOSE_TAG, key)) return;
 
-    res.push_back_doubling(cavan::prop { key.cstr(), val.cstr() });
+    res.push_back_doubling(cavan::prop { key, val });
   });
   return res;
 }
@@ -57,8 +57,8 @@ cavan::pom cavan::parse_pom(const cavan::tokens & ts) {
   cavan::pom res {};
   take(t, "project", [&] { parse_project(t, res); });
 
-  if (res.grp.size() == 0) res.grp = jute::view { res.parent.grp }.cstr();
-  if (res.ver.size() == 0) res.ver = jute::view { res.parent.ver }.cstr();
+  if (res.grp.size() == 0) res.grp = res.parent.grp;
+  if (res.ver.size() == 0) res.ver = res.parent.ver;
   return res;
 }
 
