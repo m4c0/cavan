@@ -2,10 +2,10 @@ module cavan;
 import silog;
 
 namespace {
-  class kvmap {
+  template <typename V> class kvmap {
     struct kv {
       hai::cstr key {};
-      hai::cstr val {};
+      V val {};
       unsigned depth {};
     };
 
@@ -13,10 +13,10 @@ namespace {
     hashley::rowan m_deps {};
 
   public:
-    void take(jute::view key, jute::view val, unsigned depth) {
+    void take(jute::view key, V val, unsigned depth) {
       auto & idx = m_deps[key.cstr().begin()];
       if (idx == 0) {
-        m_bucket.push_back(kv { key.cstr(), val.cstr(), depth });
+        m_bucket.push_back(kv { key.cstr(), traits::move(val), depth });
         idx = m_bucket.size();
         return;
       }
@@ -24,7 +24,7 @@ namespace {
       auto & dd = m_bucket[idx - 1];
       if (dd.depth <= depth) return;
 
-      dd.val = val.cstr();
+      dd.val = traits::move(val);
       dd.depth = depth;
     };
     [[nodiscard]] jute::view operator[](jute::view key) const {
@@ -36,7 +36,7 @@ namespace {
     [[nodiscard]] constexpr auto begin() const { return m_bucket.begin(); }
     [[nodiscard]] constexpr auto end() const { return m_bucket.end(); }
   };
-  class propmap : public kvmap {
+  class propmap : public kvmap<hai::cstr> {
   public:
     hai::cstr apply(jute::view str) const {
       hai::cstr res = str.cstr();
@@ -62,7 +62,7 @@ namespace {
       return res;
     };
   };
-  class depmap : kvmap {
+  class depmap : kvmap<hai::cstr> {
   public:
     using kvmap::begin;
     using kvmap::end;
@@ -70,7 +70,7 @@ namespace {
 
     void take(jute::view grp, jute::view art, jute::view ver, unsigned depth) {
       auto key = grp + ":" + art;
-      kvmap::take(key.cstr(), ver, depth);
+      kvmap::take(key.cstr(), ver.cstr(), depth);
     };
     [[nodiscard]] jute::view version_of(jute::view grp, jute::view art) const {
       auto key = grp + ":" + art;
@@ -84,7 +84,7 @@ namespace {
     propmap m_props {};
 
     void parse_parent(const cavan::pom * n, unsigned depth) {
-      for (auto & [k, v] : n->props) m_props.take(k, v, depth);
+      for (auto & [k, v] : n->props) m_props.take(k, jute::view { v }.cstr(), depth);
       for (auto & d : n->deps) m_dep_map.take(d.grp, d.art, d.ver, depth);
 
       for (auto & d : n->deps_mgmt) {
