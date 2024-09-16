@@ -1,4 +1,5 @@
 #pragma leco add_impl cavan_deps
+#pragma leco add_impl cavan_kvmap
 #pragma leco add_impl cavan_lint
 #pragma leco add_impl cavan_pom
 #pragma leco add_impl cavan_tokenizer
@@ -45,6 +46,34 @@ export struct prop {
   hai::cstr val {};
 };
 export using props = hai::varray<prop>;
+
+export class kvmap {
+  struct kv {
+    hai::cstr key {};
+    hai::cstr val {};
+    unsigned depth {};
+  };
+
+  hai::varray<kv> m_bucket;
+  hashley::rowan m_deps;
+
+public:
+  kvmap();
+  void take(jute::view key, jute::view val, unsigned depth);
+  [[nodiscard]] jute::view operator[](jute::view key) const;
+
+  [[nodiscard]] constexpr auto begin() const { return m_bucket.begin(); }
+  [[nodiscard]] constexpr auto end() const { return m_bucket.end(); }
+};
+export class depmap : kvmap {
+public:
+  using kvmap::begin;
+  using kvmap::end;
+  using kvmap::operator[];
+
+  void take(jute::view grp, jute::view art, jute::view ver, unsigned depth);
+  [[nodiscard]] jute::view version_of(jute::view grp, jute::view art) const;
+};
 
 export struct pom {
   hai::cstr filename{};

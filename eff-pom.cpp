@@ -9,67 +9,16 @@ import silog;
 
 using namespace jute::literals;
 
-class kvmap {
-  struct kv {
-    hai::cstr key {};
-    hai::cstr val {};
-    unsigned depth {};
-  };
+static cavan::depmap g_dep_map {};
+static cavan::depmap g_dep_mgmt_map {};
+static cavan::kvmap g_props {};
 
-  hai::varray<kv> m_bucket { 1024000 };
-  hashley::rowan m_deps {};
-
-public:
-  void take(jute::view key, jute::view val, unsigned depth) {
-    auto & idx = m_deps[key.cstr().begin()];
-    if (idx == 0) {
-      m_bucket.push_back(kv { key.cstr(), val.cstr(), depth });
-      idx = m_bucket.size();
-      return;
-    }
-
-    auto & dd = m_bucket[idx - 1];
-    if (dd.depth <= depth) return;
-
-    dd.val = val.cstr();
-    dd.depth = depth;
-  }
-
-  [[nodiscard]] jute::view operator[](jute::view key) const {
-    auto idx = m_deps[key.cstr().begin()];
-    if (idx == 0) return "TBD";
-    return m_bucket[idx - 1].val;
-  }
-
-  [[nodiscard]] auto begin() const { return m_bucket.begin(); }
-  [[nodiscard]] auto end() const { return m_bucket.end(); }
-};
-class dep_map : kvmap {
-public:
-  using kvmap::begin;
-  using kvmap::end;
-  using kvmap::operator[];
-
-  void take(jute::view grp, jute::view art, jute::view ver, unsigned depth) {
-    auto key = grp + ":" + art;
-    kvmap::take(key.cstr(), ver, depth);
-  }
-  [[nodiscard]] jute::view version_of(jute::view grp, jute::view art) const {
-    auto key = grp + ":" + art;
-    return kvmap::operator[](key.cstr());
-  }
-};
-
-static dep_map g_dep_map {};
-static dep_map g_dep_mgmt_map {};
-static kvmap g_props {};
-
-static auto apply_props(jute::view ver) {
+static hai::cstr apply_props(jute::view ver) {
   while (ver.size() > 3 && ver[0] == '$' && ver[1] == '{' && ver[ver.size() - 1] == '}') {
     auto prop = ver.subview(2, ver.size() - 3).middle;
     ver = g_props[prop];
   }
-  return ver;
+  return ver.cstr();
 }
 
 static void parse_parent(cavan::pom * n, unsigned depth) {
@@ -79,7 +28,7 @@ static void parse_parent(cavan::pom * n, unsigned depth) {
   for (auto & d : n->deps_mgmt) {
     if (d.scp == "import"_s) {
       auto ver = apply_props(d.ver);
-      silog::log(silog::debug, "importing %s:%s:%s", d.grp.begin(), d.art.begin(), ver.cstr().begin());
+      silog::log(silog::debug, "importing %s:%s:%s", d.grp.begin(), d.art.begin(), ver.begin());
 
       auto pom = cavan::read_pom(d.grp, d.art, ver);
       parse_parent(&pom, depth + 1);
@@ -102,9 +51,9 @@ static void run(hai::cstr xml) {
   parse_parent(&pom, 1);
 
   for (auto & [k, v, _] : g_dep_map) {
-    jute::view ver = (v.size() == 0) ? g_dep_mgmt_map[k] : v;
-    ver = apply_props(ver);
-    silog::log(silog::info, "dependency %s:%s", k.begin(), ver.cstr().begin());
+    jute::view vs = (v.size() == 0) ? g_dep_mgmt_map[k] : v;
+    auto ver = apply_props(vs);
+    silog::log(silog::info, "dependency %s:%s", k.begin(), ver.begin());
   }
 }
 
