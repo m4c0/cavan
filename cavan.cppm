@@ -29,6 +29,11 @@ namespace cavan {
   };
   export using tokens = hai::varray<token>;
 
+  export struct excl {
+    jute::view grp {};
+    jute::view art {};
+  };
+
   export struct dep {
     jute::view grp {};
     jute::view art {};
@@ -37,7 +42,7 @@ namespace cavan {
     jute::view scp { "compile" };
     jute::view cls {};
     bool opt {};
-    hashley::rowan exc {};
+    hai::varray<excl> exc {};
   };
   export using deps = hai::varray<dep>;
 

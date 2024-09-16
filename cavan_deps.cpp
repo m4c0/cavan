@@ -20,17 +20,18 @@ void cavan::take_tag(jute::view exp_id, const token *& t, hai::cstr * out) {
   *out = tmp.cstr();
 }
 
-static void take_exclusions(const token *& t, hashley::rowan & exc) try {
-  hai::cstr grp {};
-  hai::cstr art {};
+static void take_exclusions(const token *& t, auto & exc) try {
+  exc.set_capacity(16);
+
+  jute::view grp {};
+  jute::view art {};
   for (; !match(*t, T_END); t++) {
     if (match(*t, T_OPEN_TAG, "groupId")) {
       take_tag("groupId", t, &grp);
     } else if (match(*t, T_OPEN_TAG, "artifactId")) {
       take_tag("artifactId", t, &art);
     } else if (match(*t, T_CLOSE_TAG, "exclusion")) {
-      auto key = ""_hs + grp + ":" + art + "\0";
-      exc[*key] = 1;
+      exc.push_back_doubling(cavan::excl { grp, art });
     } else if (match(*t, T_CLOSE_TAG, "exclusions")) {
       return;
     }
