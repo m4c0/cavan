@@ -33,9 +33,25 @@ void cavan::depmap::take(jute::view grp, jute::view art, jute::view ver, unsigne
 }
 
 hai::cstr cavan::propmap::apply(jute::view str) const {
-  while (str.size() > 3 && str[0] == '$' && str[1] == '{' && str[str.size() - 1] == '}') {
-    auto prop = str.subview(2, str.size() - 3).middle;
-    str = (*this)[prop];
+  hai::cstr res = str.cstr();
+  for (unsigned i = 0; i < str.size() - 3; i++) {
+    if (str[i] != '$') continue;
+    if (str[i + 1] != '{') continue;
+
+    unsigned j {};
+    for (j = i; j < str.size() && str[j] != '}'; j++) {
+    }
+
+    if (j == str.size()) return res;
+
+    jute::view before { str.begin(), i };
+    jute::view prop { str.begin() + i + 2, j - i - 2 };
+    jute::view after { str.begin() + j + 1, str.size() - j - 1 };
+
+    auto concat = before + (*this)[prop] + after;
+    res = concat.cstr();
+    str = res;
+    i--;
   }
-  return str.cstr();
+  return res;
 }
