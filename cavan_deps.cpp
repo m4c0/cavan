@@ -4,14 +4,20 @@ import silog;
 
 using namespace cavan;
 
-void cavan::take_tag(jute::view exp_id, const token *& t, hai::cstr * out) {
+void cavan::take_tag(jute::view exp_id, const token *& t, jute::view * out) {
   t++;
   if (!match(*t, T_TEXT)) fail("expecting text inside tag");
 
-  *out = t->text.cstr();
+  *out = t->text;
 
   t++;
   if (!match(*t, T_CLOSE_TAG, exp_id)) fail("missing close tag for " + exp_id);
+}
+
+void cavan::take_tag(jute::view exp_id, const token *& t, hai::cstr * out) {
+  jute::view tmp;
+  take_tag(exp_id, t, &tmp);
+  *out = tmp.cstr();
 }
 
 static void take_exclusions(const token *& t, hashley::rowan & exc) try {

@@ -30,12 +30,12 @@ namespace cavan {
   export using tokens = hai::varray<token>;
 
   export struct dep {
-    hai::cstr grp {};
-    hai::cstr art {};
+    jute::view grp {};
+    jute::view art {};
     hai::cstr ver {};
-    hai::cstr typ { "jar"_s.cstr() };
-    hai::cstr scp { "compile"_s.cstr() };
-    hai::cstr cls {};
+    jute::view typ { "jar"_s.cstr() };
+    jute::view scp { "compile"_s.cstr() };
+    jute::view cls {};
     bool opt {};
     hashley::rowan exc {};
   };
@@ -69,6 +69,7 @@ namespace cavan {
   [[nodiscard]] constexpr bool match(const token & t, type tp) { return t.type == tp; }
   [[nodiscard]] constexpr bool match(const token & t, type tp, jute::view id) { return t.type == tp && t.text == id; }
 
+  void take_tag(jute::view exp_id, const token *& t, jute::view * out);
   void take_tag(jute::view exp_id, const token *& t, hai::cstr * out);
   void take_if(const token *& t, jute::view id, auto && fn) {
     if (!match(*t, T_OPEN_TAG, id)) return;
