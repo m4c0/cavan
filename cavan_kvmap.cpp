@@ -31,3 +31,11 @@ void cavan::depmap::take(jute::view grp, jute::view art, jute::view ver, unsigne
   auto key = grp + ":" + art;
   return kvmap::operator[](key.cstr());
 }
+
+hai::cstr cavan::propmap::apply(jute::view str) const {
+  while (str.size() > 3 && str[0] == '$' && str[1] == '{' && str[str.size() - 1] == '}') {
+    auto prop = str.subview(2, str.size() - 3).middle;
+    str = (*this)[prop];
+  }
+  return str.cstr();
+}

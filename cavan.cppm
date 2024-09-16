@@ -65,6 +65,10 @@ public:
   [[nodiscard]] constexpr auto begin() const { return m_bucket.begin(); }
   [[nodiscard]] constexpr auto end() const { return m_bucket.end(); }
 };
+export class propmap : public kvmap {
+public:
+  hai::cstr apply(jute::view str) const;
+};
 export class depmap : kvmap {
 public:
   using kvmap::begin;
