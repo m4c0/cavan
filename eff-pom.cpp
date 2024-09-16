@@ -16,6 +16,7 @@ static void run(hai::cstr xml) {
 
 int main(int argc, char ** argv) try {
   for (auto i = 1; i < argc; i++) {
+    silog::log(silog::info, "reading %s", argv[i]);
     run(jojo::read_cstr(jute::view::unsafe(argv[i])));
   }
 } catch (...) {
