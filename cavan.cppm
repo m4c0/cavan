@@ -1,4 +1,5 @@
 #pragma leco add_impl cavan_deps
+#pragma leco add_impl cavan_effpom
 #pragma leco add_impl cavan_kvmap
 #pragma leco add_impl cavan_lint
 #pragma leco add_impl cavan_pom
@@ -130,4 +131,6 @@ export [[nodiscard]] deps list_deps(const token *& t);
 export [[nodiscard]] pom parse_pom(const tokens & tokens);
 export [[nodiscard]] pom read_pom(hai::cstr xml);
 export [[nodiscard]] pom read_pom(jute::view grp, jute::view art, jute::view ver);
+
+export void eff_pom(const pom & p);
 } // namespace cavan
