@@ -27,9 +27,9 @@ namespace {
       dd.val = traits::move(val);
       dd.depth = depth;
     };
-    [[nodiscard]] jute::view operator[](jute::view key) const {
+    [[nodiscard]] const auto & operator[](jute::view key) const {
       auto idx = m_deps[key];
-      if (idx == 0) return "TBD";
+      if (idx == 0) throw "unresolvable version";
       return m_bucket[idx - 1].val;
     };
 
