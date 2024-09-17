@@ -15,35 +15,37 @@ static void dump_pom(void *, hai::cstr & xml) {
   auto tokens = cavan::split_tokens(xml);
   cavan::lint_xml(tokens);
 
-  auto pom = cavan::parse_pom(tokens);
-  while (true) {
-    silog::log(silog::info, "filename: %s", pom.filename.begin());
-    silog::log(silog::info, "name: %s:%s:%s", pom.grp.cstr().begin(), pom.art.cstr().begin(), pom.ver.cstr().begin());
-    silog::log(silog::info, "parent: %s:%s:%s", pom.parent.grp.cstr().begin(), pom.parent.art.cstr().begin(),
-               pom.parent.ver.cstr().begin());
+  auto root_pom = cavan::parse_pom(tokens);
+  auto * pom = &root_pom;
 
-    silog::log(silog::info, "found %d properties", pom.props.size());
-    for (auto & [k, v] : pom.props) {
+  cavan::read_parent_chain(pom);
+
+  while (pom) {
+    silog::log(silog::info, "filename: %s", pom->filename.begin());
+    silog::log(silog::info, "name: %s:%s:%s", pom->grp.cstr().begin(), pom->art.cstr().begin(),
+               pom->ver.cstr().begin());
+    silog::log(silog::info, "parent: %s:%s:%s", pom->parent.grp.cstr().begin(), pom->parent.art.cstr().begin(),
+               pom->parent.ver.cstr().begin());
+
+    silog::log(silog::info, "found %d properties", pom->props.size());
+    for (auto & [k, v] : pom->props) {
       silog::log(silog::info, "- %s = %s", k.cstr().begin(), v.cstr().begin());
     }
 
-    silog::log(silog::info, "found %d managed dependencies", pom.deps_mgmt.size());
-    for (auto & d : pom.deps_mgmt) {
+    silog::log(silog::info, "found %d managed dependencies", pom->deps_mgmt.size());
+    for (auto & d : pom->deps_mgmt) {
       silog::log(silog::info, "- %10s %s:%s:%s", d.scp.cstr().begin(), d.grp.cstr().begin(), d.art.cstr().begin(),
                  d.ver.cstr().begin());
     }
 
-    silog::log(silog::info, "found %d dependencies", pom.deps.size());
-    for (auto & d : pom.deps) {
+    silog::log(silog::info, "found %d dependencies", pom->deps.size());
+    for (auto & d : pom->deps) {
       silog::log(silog::info, "- %10s %s:%s:%s", d.scp.cstr().begin(), d.grp.cstr().begin(), d.art.cstr().begin(),
                  d.ver.cstr().begin());
     }
 
-    if (pom.parent.grp.size() == 0) break;
-
-    silog::log(silog::info, "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-");
-
-    pom = cavan::read_pom(pom.parent.grp, pom.parent.art, pom.parent.ver);
+    pom = &*pom->ppom;
+    if (pom) silog::log(silog::info, "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-");
   }
 }
 

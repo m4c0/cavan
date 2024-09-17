@@ -55,6 +55,7 @@ namespace cavan {
   export struct pom {
     hai::cstr filename {};
     hai::cstr xml {};
+    hai::uptr<pom> ppom {};
 
     jute::view grp {};
     jute::view art {};
@@ -100,6 +101,7 @@ namespace cavan {
   export [[nodiscard]] pom parse_pom(const tokens & tokens);
   export [[nodiscard]] pom read_pom(hai::cstr xml);
   export [[nodiscard]] pom read_pom(jute::view grp, jute::view art, jute::view ver);
+  export void read_parent_chain(pom * p);
 
   export void eff_pom(const pom & p);
 } // namespace cavan

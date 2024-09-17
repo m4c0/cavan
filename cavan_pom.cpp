@@ -90,3 +90,11 @@ cavan::pom cavan::read_pom(jute::view grp, jute::view art, jute::view ver) try {
   silog::log(silog::info, "while parsing POM of %s:%s:%s", grp.cstr().begin(), art.cstr().begin(), ver.cstr().begin());
   throw;
 }
+
+void cavan::read_parent_chain(pom * p) {
+  while (p->parent.grp.size() > 0) {
+    auto * next = new pom { read_pom(p->parent.grp, p->parent.art, p->parent.ver) };
+    p->ppom.reset(next);
+    p = next;
+  }
+}
