@@ -11,7 +11,8 @@ using namespace jute::literals;
 
 static void run(hai::cstr xml) {
   auto pom = cavan::read_pom(traits::move(xml));
-  cavan::eff_pom(pom);
+  cavan::read_parent_chain(&pom);
+  cavan::eff_pom(&pom);
 }
 
 int main(int argc, char ** argv) try {

@@ -62,17 +62,17 @@ namespace {
       return res;
     };
   };
-  class depmap : kvmap<hai::cstr> {
+  class depmap : kvmap<cavan::dep *> {
   public:
     using kvmap::begin;
     using kvmap::end;
     using kvmap::operator[];
 
-    void take(jute::view grp, jute::view art, jute::view ver, unsigned depth) {
-      auto key = grp + ":" + art;
-      kvmap::take(key.cstr(), ver.cstr(), depth);
+    void take(cavan::dep * d, unsigned depth) {
+      auto key = d->grp + ":" + d->art;
+      kvmap::take(key.cstr(), d, depth);
     };
-    [[nodiscard]] jute::view version_of(jute::view grp, jute::view art) const {
+    [[nodiscard]] auto * dep_of(jute::view grp, jute::view art) const {
       auto key = grp + ":" + art;
       return kvmap::operator[](key.cstr());
     };
@@ -83,39 +83,34 @@ namespace {
     depmap m_dep_mgmt_map {};
     propmap m_props {};
 
-    void parse_parent(const cavan::pom * n, unsigned depth) {
+    void parse_parent(cavan::pom * n, unsigned depth) {
       for (auto & [k, v] : n->props) m_props.take(k, v.cstr(), depth);
-      for (auto & d : n->deps) m_dep_map.take(d.grp, d.art, d.ver, depth);
+      for (auto & d : n->deps) m_dep_map.take(&d, depth);
 
       for (auto & d : n->deps_mgmt) {
         if (d.scp == "import"_s) {
-          auto ver = m_props.apply(d.ver);
-          // silog::log(silog::debug, "importing %s:%s:%s", d.grp.begin(), d.art.begin(), ver.begin());
-
-          auto pom = cavan::read_pom(d.grp, d.art, ver);
-          parse_parent(&pom, depth + 1);
+          if (!d.pom) {
+            auto ver = m_props.apply(d.ver);
+            // silog::log(silog::debug, "importing %s:%s:%s", d.grp.begin(), d.art.begin(), ver.begin());
+            d.pom.reset(new cavan::pom { cavan::read_pom(d.grp, d.art, ver) });
+          }
+          parse_parent(&*d.pom, depth + 1);
         } else {
-          m_dep_mgmt_map.take(d.grp, d.art, d.ver, depth);
+          m_dep_mgmt_map.take(&d, depth);
         }
       }
 
-      auto & [grp, art, ver] = n->parent;
-      if (!grp.size() && !art.size() && !ver.size()) return;
-
-      // silog::log(silog::debug, "parsing %s:%s:%s", grp.begin(), art.begin(), ver.begin());
-
-      auto parent = cavan::read_pom(grp, art, ver);
-      parse_parent(&parent, depth + 1);
+      if (!n->ppom) return;
+      parse_parent(&*n->ppom, depth + 1);
     }
 
   public:
-    void run(const cavan::pom & pom) {
-      parse_parent(&pom, 1);
+    void run(cavan::pom * pom) {
+      parse_parent(pom, 1);
 
-      for (auto & [k, v, _] : m_dep_map) {
-        auto [grp, art] = jute::view { k }.split(':');
-
-        jute::view vs = (v.size() == 0) ? m_dep_mgmt_map[k] : v;
+      for (auto & [k, d, _] : m_dep_map) {
+        jute::view v = d->ver;
+        jute::view vs = (v.size() == 0) ? m_dep_mgmt_map[k]->ver : v;
         auto ver = m_props.apply(vs);
 
         silog::log(silog::info, "dependency %s:%s", k.begin(), ver.begin());
@@ -124,7 +119,7 @@ namespace {
   };
 } // namespace
 
-void cavan::eff_pom(const cavan::pom & p) {
+void cavan::eff_pom(cavan::pom * p) {
   context c {};
   c.run(p);
 }

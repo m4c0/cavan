@@ -34,6 +34,7 @@ namespace cavan {
     jute::view art {};
   };
 
+  export struct pom;
   export struct dep {
     jute::view grp {};
     jute::view art {};
@@ -43,6 +44,7 @@ namespace cavan {
     jute::view cls {};
     bool opt {};
     hai::varray<excl> exc {};
+    hai::uptr<pom> pom;
   };
   export using deps = hai::varray<dep>;
 
@@ -103,5 +105,5 @@ namespace cavan {
   export [[nodiscard]] pom read_pom(jute::view grp, jute::view art, jute::view ver);
   export void read_parent_chain(pom * p);
 
-  export void eff_pom(const pom & p);
+  export void eff_pom(pom * p);
 } // namespace cavan
