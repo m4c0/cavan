@@ -20,7 +20,8 @@ static void list_deps(void *, hai::cstr & xml) {
         silog::log(silog::info, "found %d dependencies", deps.size());
 
         for (auto & d : deps) {
-          silog::log(silog::debug, "%s:%s:%s:%s", d.grp.begin(), d.art.begin(), d.ver.begin(), d.scp.begin());
+          silog::log(silog::debug, "%s:%s:%s:%s", d.grp.cstr().begin(), d.art.cstr().begin(), d.ver.cstr().begin(),
+                     d.scp.cstr().begin());
         }
       })
       .log_error([] { throw 1; });
