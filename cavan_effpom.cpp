@@ -35,8 +35,9 @@ namespace {
 
     [[nodiscard]] constexpr auto begin() const { return m_bucket.begin(); }
     [[nodiscard]] constexpr auto end() const { return m_bucket.end(); }
+    [[nodiscard]] constexpr auto size() const { return m_bucket.size(); }
   };
-  class propmap : public kvmap<hai::cstr> {
+  class propmap : public kvmap<cavan::prop *> {
   public:
     hai::cstr apply(jute::view str) const {
       hai::cstr res = str.cstr();
@@ -54,7 +55,7 @@ namespace {
         jute::view prop { str.begin() + i + 2, j - i - 2 };
         jute::view after { str.begin() + j + 1, str.size() - j - 1 };
 
-        auto concat = before + (*this)[prop] + after;
+        auto concat = before + (*this)[prop]->val + after;
         res = concat.cstr();
         str = res;
         i--;
@@ -66,6 +67,7 @@ namespace {
   public:
     using kvmap::begin;
     using kvmap::end;
+    using kvmap::size;
     using kvmap::operator[];
 
     void take(cavan::dep * d, unsigned depth) {
@@ -84,7 +86,7 @@ namespace {
     propmap m_props {};
 
     void parse_parent(cavan::pom * n, unsigned depth) {
-      for (auto & [k, v] : n->props) m_props.take(k, v.cstr(), depth);
+      for (auto & d : n->props) m_props.take(d.key, &d, depth);
       for (auto & d : n->deps) m_dep_map.take(&d, depth);
 
       for (auto & d : n->deps_mgmt) {
@@ -109,8 +111,7 @@ namespace {
       parse_parent(pom, 1);
 
       for (auto & [k, d, _] : m_dep_map) {
-        jute::view v = d->ver;
-        jute::view vs = (v.size() == 0) ? m_dep_mgmt_map[k]->ver : v;
+        jute::view vs = (d->ver.size() == 0) ? m_dep_mgmt_map[k]->ver : d->ver;
         auto ver = m_props.apply(vs);
 
         silog::log(silog::info, "dependency %s:%s", k.begin(), ver.begin());
