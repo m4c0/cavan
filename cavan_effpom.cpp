@@ -38,28 +38,25 @@ namespace {
   };
   class propmap : public kvmap<cavan::prop *> {
   public:
-    hai::cstr apply(jute::view str) const {
-      hai::cstr res = str.cstr();
+    jute::heap apply(jute::heap str) const {
       for (unsigned i = 0; i < str.size() - 3; i++) {
-        if (str[i] != '$') continue;
-        if (str[i + 1] != '{') continue;
+        if ((*str)[i] != '$') continue;
+        if ((*str)[i + 1] != '{') continue;
 
         unsigned j {};
-        for (j = i; j < str.size() && str[j] != '}'; j++) {
+        for (j = i; j < str.size() && (*str)[j] != '}'; j++) {
         }
 
-        if (j == str.size()) return res;
+        if (j == str.size()) return str;
 
         jute::view before { str.begin(), i };
         jute::view prop { str.begin() + i + 2, j - i - 2 };
         jute::view after { str.begin() + j + 1, str.size() - j - 1 };
 
-        auto concat = before + (*this)[prop]->val + after;
-        res = concat.cstr();
-        str = res;
+        str = before + (*this)[prop]->val + after;
         i--;
       }
-      return res;
+      return str;
     };
   };
   class depmap : kvmap<cavan::dep *> {
@@ -92,7 +89,7 @@ namespace {
           if (!d.pom) {
             auto ver = m_props.apply(d.ver);
             // silog::log(silog::debug, "importing %s:%s:%s", d.grp.begin(), d.art.begin(), ver.begin());
-            d.pom.reset(new cavan::pom { cavan::read_pom(d.grp, d.art, ver) });
+            d.pom.reset(new cavan::pom { cavan::read_pom(d.grp, d.art, *ver) });
           }
           parse_parent(&*d.pom, depth + 1);
         } else {
@@ -109,10 +106,11 @@ namespace {
       parse_parent(pom, 1);
 
       for (auto & [d, _] : m_dep_map) {
-        jute::view vs = (d->ver.size() == 0) ? m_dep_mgmt_map.dep_of(d->grp, d->art)->ver : d->ver;
+        auto vs = (d->ver.size() == 0) ? m_dep_mgmt_map.dep_of(d->grp, d->art)->ver : d->ver;
         auto ver = m_props.apply(vs);
 
-        silog::log(silog::info, "dependency %s:%s:%s", d->grp.cstr().begin(), d->art.cstr().begin(), ver.begin());
+        silog::log(silog::info, "dependency %s:%s:%s", d->grp.cstr().begin(), d->art.cstr().begin(),
+                   (*ver).cstr().begin());
       }
     }
   };

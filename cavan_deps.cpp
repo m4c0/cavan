@@ -13,6 +13,11 @@ void cavan::take_tag(jute::view exp_id, const token *& t, jute::view * out) {
   t++;
   if (!match(*t, T_CLOSE_TAG, exp_id)) fail("missing close tag for " + exp_id);
 }
+void take_tag(jute::view exp_id, const token *& t, jute::heap * out) {
+  jute::view tmp;
+  cavan::take_tag(exp_id, t, &tmp);
+  *out = jute::heap { jute::no_copy {}, tmp };
+}
 
 static void take_exclusions(const token *& t, auto & exc) try {
   exc.set_capacity(16);

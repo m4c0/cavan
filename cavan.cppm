@@ -38,7 +38,7 @@ namespace cavan {
   export struct dep {
     jute::view grp {};
     jute::view art {};
-    jute::view ver {};
+    jute::heap ver {};
     jute::view typ { "jar" };
     jute::view scp { "compile" };
     jute::view cls {};
