@@ -4,7 +4,6 @@ import silog;
 namespace {
   template <typename V> class kvmap {
     struct kv {
-      hai::cstr key {};
       V val {};
       unsigned depth {};
     };
@@ -16,7 +15,7 @@ namespace {
     void take(jute::view key, V val, unsigned depth) {
       auto & idx = m_deps[key];
       if (idx == 0) {
-        m_bucket.push_back(kv { key.cstr(), traits::move(val), depth });
+        m_bucket.push_back(kv { val, depth });
         idx = m_bucket.size();
         return;
       }
@@ -110,11 +109,11 @@ namespace {
     void run(cavan::pom * pom) {
       parse_parent(pom, 1);
 
-      for (auto & [k, d, _] : m_dep_map) {
-        jute::view vs = (d->ver.size() == 0) ? m_dep_mgmt_map[k]->ver : d->ver;
+      for (auto & [d, _] : m_dep_map) {
+        jute::view vs = (d->ver.size() == 0) ? m_dep_mgmt_map.dep_of(d->grp, d->art)->ver : d->ver;
         auto ver = m_props.apply(vs);
 
-        silog::log(silog::info, "dependency %s:%s", k.begin(), ver.begin());
+        silog::log(silog::info, "dependency %s:%s:%s", d->grp.cstr().begin(), d->art.cstr().begin(), ver.begin());
       }
     }
   };
