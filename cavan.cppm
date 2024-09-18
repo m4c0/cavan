@@ -78,7 +78,6 @@ namespace cavan {
   [[nodiscard]] constexpr bool match(const token & t, type tp, jute::view id) { return t.type == tp && t.text == id; }
 
   void take_tag(jute::view exp_id, const token *& t, jute::view * out);
-  void take_tag(jute::view exp_id, const token *& t, hai::cstr * out);
   void take_if(const token *& t, jute::view id, auto && fn) {
     if (!match(*t, T_OPEN_TAG, id)) return;
 

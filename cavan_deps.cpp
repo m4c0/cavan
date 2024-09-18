@@ -14,12 +14,6 @@ void cavan::take_tag(jute::view exp_id, const token *& t, jute::view * out) {
   if (!match(*t, T_CLOSE_TAG, exp_id)) fail("missing close tag for " + exp_id);
 }
 
-void cavan::take_tag(jute::view exp_id, const token *& t, hai::cstr * out) {
-  jute::view tmp;
-  take_tag(exp_id, t, &tmp);
-  *out = tmp.cstr();
-}
-
 static void take_exclusions(const token *& t, auto & exc) try {
   exc.set_capacity(16);
 
@@ -54,7 +48,7 @@ static dep take_dep(const token *& t) try {
     } else if (match(*t, T_OPEN_TAG, "scope")) {
       take_tag("scope", t, &d.scp);
     } else if (match(*t, T_OPEN_TAG, "optional")) {
-      hai::cstr tmp { 100 };
+      jute::view tmp {};
       take_tag("optional", t, &tmp);
       d.opt = "true"_s == tmp;
     } else if (match(*t, T_OPEN_TAG, "classifier")) {
