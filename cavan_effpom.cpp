@@ -67,7 +67,6 @@ namespace {
     using kvmap::begin;
     using kvmap::end;
     using kvmap::size;
-    using kvmap::operator[];
 
     void take(cavan::dep * d, unsigned depth) {
       auto key = d->grp + ":" + d->art;
