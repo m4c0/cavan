@@ -3,40 +3,37 @@ import silog;
 
 namespace {
   template <typename V> class kvmap {
-    struct kv {
-      V val {};
-      unsigned depth {};
-    };
-
-    hai::varray<kv> m_bucket { 1024000 };
+    hai::varray<V *> m_values { 1024000 };
+    hai::varray<unsigned> m_depths { 1024000 };
     hashley::rowan m_deps {};
 
   public:
-    void take(jute::view key, V val, unsigned depth) {
+    void take(jute::view key, V * val, unsigned depth) {
       auto & idx = m_deps[key];
       if (idx == 0) {
-        m_bucket.push_back(kv { val, depth });
-        idx = m_bucket.size();
+        m_values.push_back(val);
+        m_depths.push_back(depth);
+        idx = m_values.size();
         return;
       }
 
-      auto & dd = m_bucket[idx - 1];
-      if (dd.depth <= depth) return;
+      auto & dd = m_depths[idx - 1];
+      if (dd <= depth) return;
 
-      dd.val = traits::move(val);
-      dd.depth = depth;
+      m_values[idx - 1] = val;
+      dd = depth;
     };
-    [[nodiscard]] const auto & operator[](jute::view key) const {
+    [[nodiscard]] const auto * operator[](jute::view key) const {
       auto idx = m_deps[key];
       if (idx == 0) throw "unresolvable version";
-      return m_bucket[idx - 1].val;
+      return m_values[idx - 1];
     };
 
-    [[nodiscard]] constexpr auto begin() const { return m_bucket.begin(); }
-    [[nodiscard]] constexpr auto end() const { return m_bucket.end(); }
-    [[nodiscard]] constexpr auto size() const { return m_bucket.size(); }
+    [[nodiscard]] constexpr auto begin() const { return m_values.begin(); }
+    [[nodiscard]] constexpr auto end() const { return m_values.end(); }
+    [[nodiscard]] constexpr auto size() const { return m_values.size(); }
   };
-  class propmap : public kvmap<cavan::prop *> {
+  class propmap : public kvmap<cavan::prop> {
   public:
     jute::heap apply(jute::heap str) const {
       for (unsigned i = 0; i < str.size() - 3; i++) {
@@ -59,7 +56,7 @@ namespace {
       return str;
     };
   };
-  class depmap : kvmap<cavan::dep *> {
+  class depmap : kvmap<cavan::dep> {
   public:
     using kvmap::begin;
     using kvmap::end;
@@ -87,9 +84,9 @@ namespace {
       for (auto & d : n->deps_mgmt) {
         if (d.scp == "import"_s) {
           if (!d.pom) {
-            auto ver = m_props.apply(d.ver);
+            d.ver = m_props.apply(d.ver);
             // silog::log(silog::debug, "importing %s:%s:%s", d.grp.begin(), d.art.begin(), ver.begin());
-            d.pom.reset(new cavan::pom { cavan::read_pom(d.grp, d.art, *ver) });
+            d.pom.reset(new cavan::pom { cavan::read_pom(d.grp, d.art, *d.ver) });
           }
           parse_parent(&*d.pom, depth + 1);
         } else {
@@ -105,12 +102,12 @@ namespace {
     void run(cavan::pom * pom) {
       parse_parent(pom, 1);
 
-      for (auto & [d, _] : m_dep_map) {
-        auto vs = (d->ver.size() == 0) ? m_dep_mgmt_map.dep_of(d->grp, d->art)->ver : d->ver;
-        auto ver = m_props.apply(vs);
+      for (auto & d : m_dep_map) {
+        d->ver = (d->ver.size() == 0) ? m_dep_mgmt_map.dep_of(d->grp, d->art)->ver : d->ver;
+        d->ver = m_props.apply(d->ver);
 
         silog::log(silog::info, "dependency %s:%s:%s", d->grp.cstr().begin(), d->art.cstr().begin(),
-                   (*ver).cstr().begin());
+                   (*d->ver).cstr().begin());
       }
     }
   };
