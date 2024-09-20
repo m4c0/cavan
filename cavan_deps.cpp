@@ -20,7 +20,7 @@ void take_tag(jute::view exp_id, const token *& t, jute::heap * out) {
 }
 
 static void take_exclusions(const token *& t, auto & exc) try {
-  exc.set_capacity(16);
+  exc = hai::sptr<hai::varray<cavan::excl>>::make(16U);
 
   jute::view grp {};
   jute::view art {};
@@ -30,7 +30,7 @@ static void take_exclusions(const token *& t, auto & exc) try {
     } else if (match(*t, T_OPEN_TAG, "artifactId")) {
       take_tag("artifactId", t, &art);
     } else if (match(*t, T_CLOSE_TAG, "exclusion")) {
-      exc.push_back_doubling(cavan::excl { grp, art });
+      exc->push_back_doubling(cavan::excl { grp, art });
     } else if (match(*t, T_CLOSE_TAG, "exclusions")) {
       return;
     }

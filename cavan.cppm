@@ -44,8 +44,8 @@ namespace cavan {
     jute::view scp { "compile" };
     jute::view cls {};
     bool opt {};
-    hai::varray<excl> exc {};
-    hai::uptr<pom> pom;
+    hai::sptr<hai::varray<excl>> exc {};
+    hai::sptr<pom> pom;
   };
   export using deps = hai::varray<dep>;
 

@@ -61,7 +61,7 @@ namespace {
           if (!d.pom) {
             d.ver = cavan::apply_props(n, d.ver);
             // silog::log(silog::debug, "importing %s:%s:%s", d.grp.begin(), d.art.begin(), ver.begin());
-            d.pom.reset(new cavan::pom { cavan::read_pom(d.grp, d.art, *d.ver) });
+            d.pom = hai::sptr<cavan::pom>::make(cavan::read_pom(d.grp, d.art, *d.ver));
           }
           parse_parent(&*d.pom, depth + 1);
         } else {
