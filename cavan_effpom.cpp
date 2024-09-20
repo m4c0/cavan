@@ -88,7 +88,29 @@ namespace {
   };
 } // namespace
 
-void cavan::eff_pom(cavan::pom * p) {
-  context c {};
-  c.run(p);
+static void merge_dep_mgmt(cavan::pom * pom) {
+  if (pom->ppom) merge_dep_mgmt(&*pom->ppom);
+
+  hashley::rowan depths {};
+  for (auto & d : pom->deps_mgmt) {
+    auto key = d.grp + ":" + d.art;
+    depths[key.cstr()] = 1;
+  }
+  if (pom->ppom) {
+    for (const auto & d : pom->ppom->deps_mgmt) {
+      auto key = d.grp + ":" + d.art;
+      auto & depth = depths[key.cstr()];
+      if (depth != 0) continue;
+      pom->deps_mgmt.push_back_doubling(d);
+      depth = 2;
+    }
+  }
+}
+
+void cavan::eff_pom(cavan::pom * pom) {
+  cavan::read_parent_chain(pom);
+  cavan::merge_props(pom);
+  merge_dep_mgmt(pom);
+
+  // context c {}; c.run(p);
 }

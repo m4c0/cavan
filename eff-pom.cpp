@@ -10,9 +10,12 @@ using namespace jute::literals;
 
 static void run(hai::cstr xml) {
   auto pom = cavan::read_pom(traits::move(xml));
-  cavan::read_parent_chain(&pom);
-  cavan::merge_props(&pom);
   cavan::eff_pom(&pom);
+
+  for (auto & d : pom.deps_mgmt) {
+    silog::log(silog::info, "dep mgmt -- %s:%s:%s", d.grp.cstr().begin(), d.art.cstr().begin(),
+               (*d.ver).cstr().begin());
+  }
 }
 
 int main(int argc, char ** argv) try {
