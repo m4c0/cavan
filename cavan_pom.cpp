@@ -93,8 +93,10 @@ cavan::pom cavan::read_pom(jute::view grp, jute::view art, jute::view ver) try {
 
 void cavan::read_parent_chain(pom * p) {
   while (p->parent.grp.size() > 0) {
-    auto * next = new pom { read_pom(p->parent.grp, p->parent.art, p->parent.ver) };
-    p->ppom.reset(next);
-    p = next;
+    if (!p->ppom) {
+      auto * next = new pom { read_pom(p->parent.grp, p->parent.art, p->parent.ver) };
+      p->ppom.reset(next);
+    }
+    p = &*p->ppom;
   }
 }
