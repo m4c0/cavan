@@ -2,6 +2,7 @@
 #pragma leco add_impl cavan_effpom
 #pragma leco add_impl cavan_lint
 #pragma leco add_impl cavan_pom
+#pragma leco add_impl cavan_props
 #pragma leco add_impl cavan_tokenizer
 export module cavan;
 export import :fail;
@@ -103,6 +104,8 @@ namespace cavan {
   export [[nodiscard]] pom read_pom(hai::cstr xml);
   export [[nodiscard]] pom read_pom(jute::view grp, jute::view art, jute::view ver);
   export void read_parent_chain(pom * p);
+
+  export void merge_props(pom * p);
 
   export void eff_pom(pom * p);
 } // namespace cavan
