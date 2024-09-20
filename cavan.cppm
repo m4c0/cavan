@@ -73,6 +73,8 @@ namespace cavan {
     cavan::deps deps {};
     cavan::deps deps_mgmt {};
     cavan::props props {};
+
+    hashley::rowan prop_index {};
   };
 
   [[nodiscard]] constexpr bool match(const token & t, type tp) { return t.type == tp; }
@@ -106,6 +108,7 @@ namespace cavan {
   export void read_parent_chain(pom * p);
 
   export void merge_props(pom * p);
+  export jute::heap apply_props(pom * p, jute::heap str);
 
   export void eff_pom(pom * p);
 } // namespace cavan

@@ -12,7 +12,8 @@ static void run(hai::cstr xml) {
   cavan::merge_props(&pom);
 
   for (auto [k, v] : pom.props) {
-    silog::log(silog::info, "%s = %s", k.cstr().begin(), v.cstr().begin());
+    auto vv = cavan::apply_props(&pom, jute::heap { jute::no_copy {}, v });
+    silog::log(silog::info, "%s = %s", k.cstr().begin(), (*vv).cstr().begin());
   }
 }
 
