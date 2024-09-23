@@ -15,6 +15,7 @@ static void run(hai::cstr xml) {
     auto vv = cavan::apply_props(&pom, jute::heap { jute::no_copy {}, v });
     silog::log(silog::info, "%s = %s", k.cstr().begin(), (*vv).cstr().begin());
   }
+  silog::log(silog::info, "Total: %d properties", pom.props.size());
 }
 
 int main(int argc, char ** argv) try {
