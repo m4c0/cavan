@@ -3,9 +3,10 @@
 #include <string.h>
 
 import cavan;
+import hai;
+import hashley;
 import jojo;
 import jute;
-import mtime;
 
 using namespace jute::literals;
 
@@ -16,6 +17,42 @@ static auto infer_base_folder(jute::view src) {
     src = l;
   }
   cavan::fail("file not in maven repo");
+}
+
+static void add_deps(const auto & tmpnam, cavan::pom & pom, bool test_scope, hai::fn<bool, cavan::dep &> excl) try {
+  jute::heap m2repo { jute::view::unsafe(getenv("HOME")) + "/.m2/repository" };
+
+  for (auto & d : pom.deps) {
+    if (excl(d)) continue;
+    if (d.cls != "jar"_s && d.cls != ""_s) continue;
+    if (test_scope && d.scp != "test"_s && d.scp != "compile"_s) continue;
+    if (!test_scope && d.scp != "compile"_s) continue;
+
+    auto jar = m2repo;
+    auto grp = d.grp;
+    while (grp.size() > 0) {
+      auto [l, r] = grp.split('.');
+      jar = jar + "/" + l;
+      grp = r;
+    }
+    jar = jar + "/" + d.art + "/" + d.ver + "/" + d.art + "-" + d.ver + "." + d.typ;
+
+    jojo::append(tmpnam, ":"_hs + jar);
+
+    auto dpom = cavan::read_pom(d.grp, d.art, *d.ver);
+    cavan::eff_pom(&dpom);
+
+    /*
+    hashley::rowan exc {};
+    for (auto [g, a] : *d.exc) exc[(g + ":" + a).cstr()] = 1;
+    add_deps(tmpnam, dpom, test_scope, [&exc, &excl](auto & d) {
+      if (exc[(d.grp + ":" + d.art).cstr()]) return true;
+      return excl(d);
+    });
+    */
+  }
+} catch (...) {
+  cavan::whilst("processing dependencies of " + pom.grp + ":" + pom.art + ":" + pom.ver);
 }
 
 static int compile(char * fname) {
@@ -33,26 +70,7 @@ static int compile(char * fname) {
 
   bool test_scope = strstr(fname, "src/test/");
 
-  jute::heap m2repo { jute::view::unsafe(getenv("HOME")) + "/.m2/repository" };
-
-  for (auto & d : pom.deps) {
-    if (d.cls != "jar"_s && d.cls != ""_s) continue;
-    if (test_scope && d.scp != "test"_s && d.scp != "compile"_s) continue;
-    if (!test_scope && d.scp != "compile"_s) continue;
-
-    // TODO: traverse deps
-
-    auto jar = m2repo;
-    auto grp = d.grp;
-    while (grp.size() > 0) {
-      auto [l, r] = grp.split('.');
-      jar = jar + "/" + l;
-      grp = r;
-    }
-    jar = jar + "/" + d.art + "/" + d.ver + "/" + d.art + "-" + d.ver + "." + d.typ;
-
-    jojo::append(tmpnam, ":"_hs + jar);
-  }
+  add_deps(tmpnam, pom, test_scope, [](auto &) { return false; });
 
   jojo::append(tmpnam, "\n"_hs);
   jojo::append(tmpnam, src);
