@@ -87,8 +87,7 @@ cavan::pom cavan::read_pom(jute::view grp, jute::view art, jute::view ver) try {
   pom.filename = pom_file.cstr();
   return pom;
 } catch (...) {
-  silog::log(silog::info, "while parsing POM of %s:%s:%s", grp.cstr().begin(), art.cstr().begin(), ver.cstr().begin());
-  throw;
+  cavan::whilst("parsing POM of " + grp + ":" + art + ":" + ver);
 }
 
 void cavan::read_parent_chain(pom * p) {
