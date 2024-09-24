@@ -92,12 +92,12 @@ static void merge_deps(cavan::pom * pom, cavan::deps(cavan::pom::*m)) {
   if (pom->ppom) merge_deps(&*pom->ppom, m);
 
   hashley::rowan depths {};
-  for (auto & d : pom->deps_mgmt) {
+  for (auto & d : pom->*m) {
     auto key = d.grp + ":" + d.art;
     depths[key.cstr()] = 1;
   }
   if (pom->ppom) {
-    for (const auto & d : pom->ppom->deps_mgmt) {
+    for (const auto & d : (*pom->ppom).*m) {
       auto key = d.grp + ":" + d.art;
       auto & depth = depths[key.cstr()];
       if (depth != 0) continue;
