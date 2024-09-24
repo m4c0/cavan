@@ -90,7 +90,7 @@ cavan::pom cavan::read_pom(jute::view grp, jute::view art, jute::view ver) try {
   cavan::whilst("parsing POM of " + grp + ":" + art + ":" + ver);
 }
 
-void cavan::read_parent_chain(pom * p) {
+void cavan::read_parent_chain(pom * p) try {
   while (p->parent.grp.size() > 0) {
     if (!p->ppom) {
       auto * next = new pom { read_pom(p->parent.grp, p->parent.art, p->parent.ver) };
@@ -98,4 +98,6 @@ void cavan::read_parent_chain(pom * p) {
     }
     p = &*p->ppom;
   }
+} catch (...) {
+  cavan::whilst("reading chain of " + p->grp + ":" + p->art + ":" + p->ver);
 }
