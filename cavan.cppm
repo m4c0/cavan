@@ -53,7 +53,7 @@ namespace cavan {
     jute::view key {};
     jute::view val {};
   };
-  export using props = hai::varray<prop>;
+  export using props = hai::chain<prop>;
 
   export struct pom {
     hai::cstr filename {};

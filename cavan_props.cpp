@@ -11,7 +11,7 @@ void cavan::merge_props(cavan::pom * pom) {
   for (auto p : ppom->props) {
     auto & i = pom->prop_index[p.key];
     if (i) continue;
-    pom->props.push_back_doubling(p);
+    pom->props.push_back(p);
     i = ++idx;
   }
 }
@@ -34,7 +34,7 @@ jute::heap cavan::apply_props(cavan::pom * pom, jute::heap str) {
     auto pidx = pom->prop_index[prop];
     if (pidx == 0) continue;
 
-    str = before + pom->props[pidx - 1].val + after;
+    str = before + pom->props.seek(pidx - 1).val + after;
     i--;
   }
   return str;

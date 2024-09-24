@@ -6,12 +6,12 @@ import jojo;
 import silog;
 
 static cavan::props list_props(const cavan::token *& t) {
-  cavan::props res { 100 };
+  cavan::props res { 32 };
   take_if(t, "properties", [&] {
     jute::view key = t->text;
 
     if (match(*t, cavan::T_TAG)) {
-      res.push_back_doubling(cavan::prop { key, {} });
+      res.push_back(cavan::prop { key, {} });
       return;
     }
     if (!match(*t, cavan::T_OPEN_TAG)) return;
@@ -24,7 +24,7 @@ static cavan::props list_props(const cavan::token *& t) {
 
     if (!match(*t, cavan::T_CLOSE_TAG, key)) return;
 
-    res.push_back_doubling(cavan::prop { key, val });
+    res.push_back(cavan::prop { key, val });
   });
   return res;
 }
