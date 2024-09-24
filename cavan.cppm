@@ -44,10 +44,10 @@ namespace cavan {
     jute::view scp { "compile" };
     jute::view cls {};
     bool opt {};
-    hai::sptr<hai::varray<excl>> exc {};
+    hai::sptr<hai::chain<excl>> exc {};
     hai::sptr<pom> pom;
   };
-  export using deps = hai::varray<dep>;
+  export using deps = hai::chain<dep>;
 
   export struct prop {
     jute::view key {};

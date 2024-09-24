@@ -101,7 +101,7 @@ static void merge_deps(cavan::pom * pom, cavan::deps(cavan::pom::*m)) {
       auto key = d.grp + ":" + d.art;
       auto & depth = depths[key.cstr()];
       if (depth != 0) continue;
-      (pom->*m).push_back_doubling(d);
+      (pom->*m).push_back(d);
       depth = 2;
     }
   }
