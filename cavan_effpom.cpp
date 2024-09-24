@@ -88,8 +88,8 @@ namespace {
   };
 } // namespace
 
-static void merge_dep_mgmt(cavan::pom * pom) {
-  if (pom->ppom) merge_dep_mgmt(&*pom->ppom);
+static void merge_deps(cavan::pom * pom, cavan::deps(cavan::pom::*m)) {
+  if (pom->ppom) merge_deps(&*pom->ppom, m);
 
   hashley::rowan depths {};
   for (auto & d : pom->deps_mgmt) {
@@ -101,7 +101,7 @@ static void merge_dep_mgmt(cavan::pom * pom) {
       auto key = d.grp + ":" + d.art;
       auto & depth = depths[key.cstr()];
       if (depth != 0) continue;
-      pom->deps_mgmt.push_back_doubling(d);
+      (pom->*m).push_back_doubling(d);
       depth = 2;
     }
   }
@@ -110,7 +110,8 @@ static void merge_dep_mgmt(cavan::pom * pom) {
 void cavan::eff_pom(cavan::pom * pom) {
   cavan::read_parent_chain(pom);
   cavan::merge_props(pom);
-  merge_dep_mgmt(pom);
+  merge_deps(pom, &cavan::pom::deps_mgmt);
+  merge_deps(pom, &cavan::pom::deps);
 
   // context c {}; c.run(p);
 }
