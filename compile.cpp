@@ -64,6 +64,12 @@ static int compile(char * fname) {
 int main(int argc, char ** argv) try {
   if (argc != 2) cavan::fail("usage: compile.exe <java-file>");
 
+  jojo::on_error([](void *, jute::view msg) {
+    silog::log(silog::error, "IO error: %s", msg.cstr().begin());
+    struct io_error {};
+    throw io_error {};
+  });
+
   return compile(argv[1]);
 } catch (...) {
   return 1;
