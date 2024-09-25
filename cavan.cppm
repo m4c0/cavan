@@ -97,14 +97,13 @@ namespace cavan {
     take_if(t, id, fn);
   }
 
-  export [[nodiscard]] tokens split_tokens(jute::view xml);
+  [[nodiscard]] tokens split_tokens(jute::view xml);
 
-  export void lint_tag(const token *& t);
-  export void lint_xml(const tokens & tokens);
+  void lint_tag(const token *& t);
+  void lint_xml(const tokens & tokens);
 
-  export [[nodiscard]] deps list_deps(const token *& t);
+  [[nodiscard]] deps list_deps(const token *& t);
 
-  export [[nodiscard]] pom * parse_pom(const tokens & tokens);
   export [[nodiscard]] pom * read_pom(jute::view file);
   export [[nodiscard]] pom * read_pom(jute::view grp, jute::view art, jute::view ver);
   export void read_parent_chain(pom * p);

@@ -11,13 +11,9 @@ import silog;
 using namespace cavan;
 using namespace jute::literals;
 
-static void dump_pom(void *, hai::cstr & xml) {
-  auto tokens = cavan::split_tokens(xml);
-  cavan::lint_xml(tokens);
-
-  auto * pom = cavan::parse_pom(tokens);
+static void run(jute::view fname) {
+  auto pom = cavan::read_pom(fname);
   cavan::read_parent_chain(pom);
-
   while (pom) {
     silog::log(silog::info, "filename: %s", pom->filename.begin());
     silog::log(silog::info, "name: %s:%s:%s", pom->grp.cstr().begin(), pom->art.cstr().begin(),
@@ -54,7 +50,7 @@ static void dump_pom(void *, hai::cstr & xml) {
 
 int main(int argc, char ** argv) try {
   for (auto i = 1; i < argc; i++) {
-    jojo::read(jute::view::unsafe(argv[i]), nullptr, dump_pom);
+    run(jute::view::unsafe(argv[i]));
   }
 } catch (...) {
   return 1;

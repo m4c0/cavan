@@ -65,7 +65,9 @@ static void parse_project(const cavan::token *& t, cavan::pom & res) {
   else lint_tag(t);
 }
 
-cavan::pom * cavan::parse_pom(const cavan::tokens & ts) {
+static cavan::pom * parse_pom(const cavan::tokens & ts) {
+  using namespace cavan;
+
   auto * t = ts.begin();
 
   if (!match(*t++, T_DIRECTIVE, "xml")) fail("missing <?xml?> directive");
@@ -84,7 +86,7 @@ static cavan::pom * try_read(jute::view file) {
   auto tokens = cavan::split_tokens(xml);
   cavan::lint_xml(tokens);
 
-  auto pom = cavan::parse_pom(tokens);
+  auto pom = parse_pom(tokens);
   pom->xml = traits::move(xml);
   pom->filename = file.cstr();
   return pom;
@@ -137,7 +139,6 @@ static auto read_parent(cavan::pom * pom) {
 }
 
 void cavan::read_parent_chain(pom * p) try {
-  // TODO: read parent locally
   while (p->parent.grp.size() > 0) {
     if (!p->ppom) p->ppom = read_parent(p);
     p = &*p->ppom;
