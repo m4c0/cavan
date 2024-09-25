@@ -45,7 +45,7 @@ namespace cavan {
     jute::view cls {};
     bool opt {};
     hai::sptr<hai::chain<excl>> exc {};
-    hai::sptr<pom> pom;
+    pom * pom;
   };
   export using deps = hai::chain<dep>;
 
@@ -58,7 +58,7 @@ namespace cavan {
   export struct pom {
     hai::cstr filename {};
     hai::cstr xml {};
-    hai::uptr<pom> ppom {};
+    pom * ppom {};
 
     jute::view grp {};
     jute::view art {};
@@ -104,9 +104,9 @@ namespace cavan {
 
   export [[nodiscard]] deps list_deps(const token *& t);
 
-  export [[nodiscard]] pom parse_pom(const tokens & tokens);
-  export [[nodiscard]] pom read_pom(jute::view file);
-  export [[nodiscard]] pom read_pom(jute::view grp, jute::view art, jute::view ver);
+  export [[nodiscard]] pom * parse_pom(const tokens & tokens);
+  export [[nodiscard]] pom * read_pom(jute::view file);
+  export [[nodiscard]] pom * read_pom(jute::view grp, jute::view art, jute::view ver);
   export void read_parent_chain(pom * p);
 
   export void merge_props(pom * p);

@@ -19,10 +19,10 @@ static auto infer_base_folder(jute::view src) {
   cavan::fail("file not in maven repo");
 }
 
-static void add_deps(const auto & tmpnam, cavan::pom & pom, bool test_scope, hai::fn<bool, cavan::dep &> excl) try {
+static void add_deps(const auto & tmpnam, cavan::pom * pom, bool test_scope, hai::fn<bool, cavan::dep &> excl) try {
   jute::heap m2repo { jute::view::unsafe(getenv("HOME")) + "/.m2/repository" };
 
-  for (auto & d : pom.deps) {
+  for (auto & d : pom->deps) {
     if (excl(d)) continue;
     if (d.cls != "jar"_s && d.cls != ""_s) continue;
     if (test_scope && d.scp != "test"_s && d.scp != "compile"_s) continue;
@@ -40,7 +40,7 @@ static void add_deps(const auto & tmpnam, cavan::pom & pom, bool test_scope, hai
     jojo::append(tmpnam, ":"_hs + jar);
 
     auto dpom = cavan::read_pom(d.grp, d.art, *d.ver);
-    cavan::eff_pom(&dpom);
+    cavan::eff_pom(dpom);
 
     // TODO: dependency recursion
     // TODO: "reactor"?
@@ -55,7 +55,7 @@ static void add_deps(const auto & tmpnam, cavan::pom & pom, bool test_scope, hai
     */
   }
 } catch (...) {
-  cavan::whilst("processing dependencies of " + pom.grp + ":" + pom.art + ":" + pom.ver);
+  cavan::whilst("processing dependencies of " + pom->grp + ":" + pom->art + ":" + pom->ver);
 }
 
 static int compile(char * fname) {
@@ -66,7 +66,7 @@ static int compile(char * fname) {
   auto tmpnam = (base + "/target/cavan-compile.args").cstr();
 
   auto pom = cavan::read_pom(pom_file);
-  cavan::eff_pom(&pom);
+  cavan::eff_pom(pom);
 
   jojo::write(tmpnam, "-d "_hs + tgt + "\n");
   jojo::append(tmpnam, "-cp "_hs + tgt);

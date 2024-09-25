@@ -2,8 +2,13 @@ module;
 extern "C" char * getenv(const char *);
 
 module cavan;
+import hai;
+import hashley;
 import jojo;
 import silog;
+
+static hai::chain<cavan::pom> g_cache_buffer { 1024 };
+static hashley::rowan g_cache_idx {};
 
 static cavan::props list_props(const cavan::token *& t) {
   cavan::props res { 32 };
@@ -60,32 +65,32 @@ static void parse_project(const cavan::token *& t, cavan::pom & res) {
   else lint_tag(t);
 }
 
-cavan::pom cavan::parse_pom(const cavan::tokens & ts) {
+cavan::pom * cavan::parse_pom(const cavan::tokens & ts) {
   auto * t = ts.begin();
 
   if (!match(*t++, T_DIRECTIVE, "xml")) fail("missing <?xml?> directive");
 
-  cavan::pom res {};
-  take(t, "project", [&] { parse_project(t, res); });
+  cavan::pom * res = new cavan::pom {}; // TODO: use cache
+  take(t, "project", [&] { parse_project(t, *res); });
 
-  if (res.grp.size() == 0) res.grp = res.parent.grp;
-  if (res.ver.size() == 0) res.ver = res.parent.ver;
+  if (res->grp.size() == 0) res->grp = res->parent.grp;
+  if (res->ver.size() == 0) res->ver = res->parent.ver;
   return res;
 }
 
-static cavan::pom try_read(jute::view file) {
+static cavan::pom * try_read(jute::view file) {
   auto xml = jojo::read_cstr(file);
 
   auto tokens = cavan::split_tokens(xml);
   cavan::lint_xml(tokens);
 
   auto pom = cavan::parse_pom(tokens);
-  pom.xml = traits::move(xml);
-  pom.filename = file.cstr();
+  pom->xml = traits::move(xml);
+  pom->filename = file.cstr();
   return pom;
 }
 
-cavan::pom cavan::read_pom(jute::view file) {
+cavan::pom * cavan::read_pom(jute::view file) {
   jojo::on_error([](void *, jute::view msg) {
     silog::log(silog::error, "IO error: %s", msg.cstr().begin());
     struct io_error {};
@@ -94,7 +99,7 @@ cavan::pom cavan::read_pom(jute::view file) {
   return try_read(file);
 }
 
-cavan::pom cavan::read_pom(jute::view grp, jute::view art, jute::view ver) try {
+cavan::pom * cavan::read_pom(jute::view grp, jute::view art, jute::view ver) try {
   if (grp == "" || art == "" || ver == "") fail("missing identifier");
 
   auto home_env = getenv("HOME");
@@ -123,7 +128,8 @@ static auto read_parent(cavan::pom * pom) {
   auto ppom = pdir + "/pom.xml";
   try {
     auto parent = try_read(ppom.cstr());
-    if (parent.grp == pom->parent.grp && parent.art == pom->parent.art && parent.ver == pom->parent.ver) return parent;
+    if (parent->grp == pom->parent.grp && parent->art == pom->parent.art && parent->ver == pom->parent.ver)
+      return parent;
   } catch (...) {
     // Ignore and try from repo
   }
@@ -133,7 +139,7 @@ static auto read_parent(cavan::pom * pom) {
 void cavan::read_parent_chain(pom * p) try {
   // TODO: read parent locally
   while (p->parent.grp.size() > 0) {
-    if (!p->ppom) p->ppom.reset(new pom { read_parent(p) });
+    if (!p->ppom) p->ppom = read_parent(p);
     p = &*p->ppom;
   }
 } catch (...) {

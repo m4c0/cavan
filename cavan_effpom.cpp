@@ -17,7 +17,7 @@ namespace {
         if (d.scp == "import"_s) {
           if (!d.pom) {
             d.ver = cavan::apply_props(pom, d.ver);
-            d.pom = hai::sptr<cavan::pom>::make(cavan::read_pom(d.grp, d.art, *d.ver));
+            d.pom = cavan::read_pom(d.grp, d.art, *d.ver);
           }
           do_pom(&*d.pom, depth + 1);
           continue;

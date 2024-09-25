@@ -7,14 +7,14 @@ import silog;
 
 static void run(jute::view fname) {
   auto pom = cavan::read_pom(fname);
-  cavan::read_parent_chain(&pom);
-  cavan::merge_props(&pom);
+  cavan::read_parent_chain(pom);
+  cavan::merge_props(pom);
 
-  for (auto [k, v] : pom.props) {
-    auto vv = cavan::apply_props(&pom, jute::heap { jute::no_copy {}, v });
+  for (auto [k, v] : pom->props) {
+    auto vv = cavan::apply_props(pom, jute::heap { jute::no_copy {}, v });
     silog::log(silog::info, "%s = %s", k.cstr().begin(), (*vv).cstr().begin());
   }
-  silog::log(silog::info, "Total: %d properties", pom.props.size());
+  silog::log(silog::info, "Total: %d properties", pom->props.size());
 }
 
 int main(int argc, char ** argv) try {

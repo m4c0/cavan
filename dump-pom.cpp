@@ -15,9 +15,7 @@ static void dump_pom(void *, hai::cstr & xml) {
   auto tokens = cavan::split_tokens(xml);
   cavan::lint_xml(tokens);
 
-  auto root_pom = cavan::parse_pom(tokens);
-  auto * pom = &root_pom;
-
+  auto * pom = cavan::parse_pom(tokens);
   cavan::read_parent_chain(pom);
 
   while (pom) {

@@ -15,7 +15,7 @@ static void list_deps(void *, hai::cstr & xml) {
       .peek(cavan::lint_xml)
       .map(cavan::parse_pom)
       .map([](auto & pom) {
-        auto & deps = pom.deps;
+        auto & deps = pom->deps;
 
         silog::log(silog::info, "found %d dependencies", deps.size());
 
