@@ -7,8 +7,24 @@ import hashley;
 import jojo;
 import silog;
 
-static hai::chain<cavan::pom> g_cache_buffer { 1024 };
-static hashley::rowan g_cache_idx {};
+static class {
+  hai::chain<cavan::pom> m_buffer { 1024 };
+  hashley::rowan m_idx {};
+
+public:
+  cavan::pom * take(cavan::pom p) {
+    auto & idx = m_idx[(p.grp + ":" + p.art + ":" + p.ver).cstr()];
+    if (idx == 0) {
+      m_buffer.push_back(traits::move(p));
+      idx = m_buffer.size();
+    }
+    return &m_buffer.seek(idx - 1);
+  }
+  cavan::pom * get(jute::view grp, jute::view art, jute::view ver) {
+    auto idx = m_idx[(grp + ":" + art + ":" + ver).cstr()];
+    return idx == 0 ? nullptr : &m_buffer.seek(idx - 1);
+  }
+} g_cache;
 
 static cavan::props list_props(const cavan::token *& t) {
   cavan::props res { 32 };
@@ -65,18 +81,18 @@ static void parse_project(const cavan::token *& t, cavan::pom & res) {
   else lint_tag(t);
 }
 
-static cavan::pom * parse_pom(const cavan::tokens & ts) {
+static cavan::pom parse_pom(const cavan::tokens & ts) {
   using namespace cavan;
 
   auto * t = ts.begin();
 
   if (!match(*t++, T_DIRECTIVE, "xml")) fail("missing <?xml?> directive");
 
-  cavan::pom * res = new cavan::pom {}; // TODO: use cache
-  take(t, "project", [&] { parse_project(t, *res); });
+  cavan::pom res {};
+  take(t, "project", [&] { parse_project(t, res); });
 
-  if (res->grp.size() == 0) res->grp = res->parent.grp;
-  if (res->ver.size() == 0) res->ver = res->parent.ver;
+  if (res.grp.size() == 0) res.grp = res.parent.grp;
+  if (res.ver.size() == 0) res.ver = res.parent.ver;
   return res;
 }
 
@@ -87,22 +103,27 @@ static cavan::pom * try_read(jute::view file) {
   cavan::lint_xml(tokens);
 
   auto pom = parse_pom(tokens);
-  pom->xml = traits::move(xml);
-  pom->filename = file.cstr();
-  return pom;
+  pom.xml = traits::move(xml);
+  pom.filename = file.cstr();
+  return g_cache.take(traits::move(pom));
 }
 
-cavan::pom * cavan::read_pom(jute::view file) {
+cavan::pom * cavan::read_pom(jute::view file) try {
   jojo::on_error([](void *, jute::view msg) {
     silog::log(silog::error, "IO error: %s", msg.cstr().begin());
     struct io_error {};
     throw io_error {};
   });
   return try_read(file);
+} catch (...) {
+  cavan::whilst("reading POM from " + file);
 }
 
 cavan::pom * cavan::read_pom(jute::view grp, jute::view art, jute::view ver) try {
   if (grp == "" || art == "" || ver == "") fail("missing identifier");
+
+  auto cached = g_cache.get(grp, art, ver);
+  if (cached) return cached;
 
   auto home_env = getenv("HOME");
   if (!home_env) fail("missing HOME environment variable");
