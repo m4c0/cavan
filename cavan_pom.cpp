@@ -62,11 +62,19 @@ cavan::pom cavan::parse_pom(const cavan::tokens & ts) {
   return res;
 }
 
-cavan::pom cavan::read_pom(hai::cstr xml) {
+cavan::pom cavan::read_pom(jute::view file) {
+  jojo::on_error([](void *, jute::view msg) {
+    silog::log(silog::error, "IO error: %s", msg.cstr().begin());
+    struct io_error {};
+    throw io_error {};
+  });
+
+  auto xml = jojo::read_cstr(file);
   auto tokens = split_tokens(xml);
   lint_xml(tokens);
   auto pom = parse_pom(tokens);
   pom.xml = traits::move(xml);
+  pom.filename = file.cstr();
   return pom;
 }
 
@@ -83,14 +91,13 @@ cavan::pom cavan::read_pom(jute::view grp, jute::view art, jute::view ver) try {
   auto home = jute::view::unsafe(home_env);
   auto pom_file = home + "/.m2/repository/" + grp_path + "/" + art + "/" + ver + "/" + art + "-" + ver + ".pom";
 
-  auto pom = read_pom(jojo::read_cstr(pom_file.cstr()));
-  pom.filename = pom_file.cstr();
-  return pom;
+  return read_pom(pom_file.cstr());
 } catch (...) {
   cavan::whilst("parsing POM of " + grp + ":" + art + ":" + ver);
 }
 
 void cavan::read_parent_chain(pom * p) try {
+  // TODO: read parent locally
   while (p->parent.grp.size() > 0) {
     if (!p->ppom) {
       auto * next = new pom { read_pom(p->parent.grp, p->parent.art, p->parent.ver) };

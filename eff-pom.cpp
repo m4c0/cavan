@@ -1,15 +1,14 @@
 #pragma leco tool
 
 import cavan;
-import jojo;
 import jute;
 import hai;
 import silog;
 
 using namespace jute::literals;
 
-static void run(hai::cstr xml) {
-  auto pom = cavan::read_pom(traits::move(xml));
+static void run(jute::view fname) {
+  auto pom = cavan::read_pom(fname);
   cavan::eff_pom(&pom);
 
   for (auto & d : pom.deps_mgmt) {
@@ -24,7 +23,7 @@ static void run(hai::cstr xml) {
 int main(int argc, char ** argv) try {
   for (auto i = 1; i < argc; i++) {
     silog::log(silog::info, "reading %s", argv[i]);
-    run(jojo::read_cstr(jute::view::unsafe(argv[i])));
+    run(jute::view::unsafe(argv[i]));
   }
 } catch (...) {
   return 1;

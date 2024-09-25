@@ -42,6 +42,9 @@ static void add_deps(const auto & tmpnam, cavan::pom & pom, bool test_scope, hai
     auto dpom = cavan::read_pom(d.grp, d.art, *d.ver);
     cavan::eff_pom(&dpom);
 
+    // TODO: dependency recursion
+    // TODO: "reactor"?
+
     /*
     hashley::rowan exc {};
     for (auto [g, a] : *d.exc) exc[(g + ":" + a).cstr()] = 1;
@@ -62,7 +65,7 @@ static int compile(char * fname) {
   auto pom_file = (base + "/pom.xml").cstr();
   auto tmpnam = (base + "/target/cavan-compile.args").cstr();
 
-  auto pom = cavan::read_pom(jojo::read_cstr(pom_file));
+  auto pom = cavan::read_pom(pom_file);
   cavan::eff_pom(&pom);
 
   jojo::write(tmpnam, "-d "_hs + tgt + "\n");
@@ -81,12 +84,6 @@ static int compile(char * fname) {
 
 int main(int argc, char ** argv) try {
   if (argc != 2) cavan::fail("usage: compile.exe <java-file>");
-
-  jojo::on_error([](void *, jute::view msg) {
-    silog::log(silog::error, "IO error: %s", msg.cstr().begin());
-    struct io_error {};
-    throw io_error {};
-  });
 
   return compile(argv[1]);
 } catch (...) {

@@ -103,7 +103,7 @@ namespace cavan {
   export [[nodiscard]] deps list_deps(const token *& t);
 
   export [[nodiscard]] pom parse_pom(const tokens & tokens);
-  export [[nodiscard]] pom read_pom(hai::cstr xml);
+  export [[nodiscard]] pom read_pom(jute::view file);
   export [[nodiscard]] pom read_pom(jute::view grp, jute::view art, jute::view ver);
   export void read_parent_chain(pom * p);
 
