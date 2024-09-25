@@ -62,20 +62,25 @@ cavan::pom cavan::parse_pom(const cavan::tokens & ts) {
   return res;
 }
 
+static cavan::pom try_read(jute::view file) {
+  auto xml = jojo::read_cstr(file);
+
+  auto tokens = cavan::split_tokens(xml);
+  cavan::lint_xml(tokens);
+
+  auto pom = cavan::parse_pom(tokens);
+  pom.xml = traits::move(xml);
+  pom.filename = file.cstr();
+  return pom;
+}
+
 cavan::pom cavan::read_pom(jute::view file) {
   jojo::on_error([](void *, jute::view msg) {
     silog::log(silog::error, "IO error: %s", msg.cstr().begin());
     struct io_error {};
     throw io_error {};
   });
-
-  auto xml = jojo::read_cstr(file);
-  auto tokens = split_tokens(xml);
-  lint_xml(tokens);
-  auto pom = parse_pom(tokens);
-  pom.xml = traits::move(xml);
-  pom.filename = file.cstr();
-  return pom;
+  return try_read(file);
 }
 
 cavan::pom cavan::read_pom(jute::view grp, jute::view art, jute::view ver) try {
@@ -96,13 +101,28 @@ cavan::pom cavan::read_pom(jute::view grp, jute::view art, jute::view ver) try {
   cavan::whilst("parsing POM of " + grp + ":" + art + ":" + ver);
 }
 
+static auto read_parent(cavan::pom * pom) {
+  jojo::on_error([](void *, jute::view msg) {
+    struct io_error {};
+    throw io_error {};
+  });
+
+  auto [dir, fn] = jute::view { pom->filename }.rsplit('/');
+  auto [pdir, dn] = dir.rsplit('/');
+  auto ppom = pdir + "/pom.xml";
+  try {
+    auto parent = try_read(ppom.cstr());
+    if (parent.grp == pom->parent.grp && parent.art == pom->parent.art && parent.ver == pom->parent.ver) return parent;
+  } catch (...) {
+    // Ignore and try from repo
+  }
+  return cavan::read_pom(pom->parent.grp, pom->parent.art, pom->parent.ver);
+}
+
 void cavan::read_parent_chain(pom * p) try {
   // TODO: read parent locally
   while (p->parent.grp.size() > 0) {
-    if (!p->ppom) {
-      auto * next = new pom { read_pom(p->parent.grp, p->parent.art, p->parent.ver) };
-      p->ppom.reset(next);
-    }
+    if (!p->ppom) p->ppom.reset(new pom { read_parent(p) });
     p = &*p->ppom;
   }
 } catch (...) {
