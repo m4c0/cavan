@@ -74,6 +74,8 @@ namespace cavan {
     cavan::deps deps_mgmt {};
     cavan::props props {};
 
+    hai::chain<jute::view> modules {};
+
     hashley::rowan prop_index {};
   };
 

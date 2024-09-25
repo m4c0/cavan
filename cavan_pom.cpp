@@ -29,6 +29,16 @@ static cavan::props list_props(const cavan::token *& t) {
   return res;
 }
 
+static auto list_modules(const cavan::token *& t) {
+  hai::chain<jute::view> res {};
+  take_if(t, "modules", [&] {
+    jute::view name;
+    take_tag("module", t, &name);
+    res.push_back(name);
+  });
+  return res;
+}
+
 static void parse_project(const cavan::token *& t, cavan::pom & res) {
   using namespace cavan;
 
@@ -46,6 +56,7 @@ static void parse_project(const cavan::token *& t, cavan::pom & res) {
     take_if(t, "dependencyManagement", [&] { res.deps_mgmt = list_deps(t); });
   else if (match(*t, T_OPEN_TAG, "dependencies")) res.deps = list_deps(t);
   else if (match(*t, T_OPEN_TAG, "properties")) res.props = list_props(t);
+  else if (match(*t, T_OPEN_TAG, "modules")) res.modules = list_modules(t);
   else lint_tag(t);
 }
 

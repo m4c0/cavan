@@ -44,6 +44,11 @@ static void dump_pom(void *, hai::cstr & xml) {
                  (*d.ver).cstr().begin());
     }
 
+    silog::log(silog::info, "found %d modules", pom->modules.size());
+    for (auto & d : pom->modules) {
+      silog::log(silog::info, "- %s", d.cstr().begin());
+    }
+
     pom = &*pom->ppom;
     if (pom) silog::log(silog::info, "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-");
   }
