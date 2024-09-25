@@ -68,6 +68,16 @@ static int compile(char * fname) {
   auto pom = cavan::read_pom(pom_file);
   cavan::eff_pom(pom);
 
+  for (auto m : pom->ppom->modules) {
+    auto [dir, fn] = jute::view { pom->ppom->filename }.rsplit('/');
+    auto cpom = dir + "/" + m + "/pom.xml";
+    try {
+      auto _ = cavan::read_pom(cpom.cstr());
+    } catch (...) {
+      cavan::whilst("reading module " + m);
+    }
+  }
+
   jojo::write(tmpnam, "-d "_hs + tgt + "\n");
   jojo::append(tmpnam, "-cp "_hs + tgt);
 
