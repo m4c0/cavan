@@ -102,7 +102,10 @@ static int compile(char * fname) {
 int main(int argc, char ** argv) try {
   if (argc != 2) cavan::fail("usage: compile.exe <java-file>");
 
-  return compile(argv[1]);
+  char buffer[10240] {};
+  realpath(argv[1], buffer);
+
+  return compile(buffer);
 } catch (...) {
   return 1;
 }
