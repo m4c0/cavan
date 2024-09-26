@@ -28,6 +28,16 @@ static void add_deps(const auto & tmpnam, cavan::pom * pom, bool test_scope, hai
     if (test_scope && d.scp != "test"_s && d.scp != "compile"_s) continue;
     if (!test_scope && d.scp != "compile"_s) continue;
 
+    auto dpom = cavan::read_pom(d.grp, d.art, *d.ver);
+    cavan::eff_pom(dpom);
+
+    jute::view dpom_fn { dpom->filename };
+    if (!dpom_fn.starts_with(*m2repo)) {
+      auto [dir, fn] = dpom_fn.rsplit('/');
+      jojo::append(tmpnam, ":"_hs + dir + "/target/classes");
+      continue;
+    }
+
     auto jar = m2repo;
     auto grp = d.grp;
     while (grp.size() > 0) {
@@ -39,10 +49,7 @@ static void add_deps(const auto & tmpnam, cavan::pom * pom, bool test_scope, hai
 
     jojo::append(tmpnam, ":"_hs + jar);
 
-    auto dpom = cavan::read_pom(d.grp, d.art, *d.ver);
-    cavan::eff_pom(dpom);
-
-    // TODO: dependency recursion
+    // TODO: dependency recursion?
     // TODO: "reactor"?
 
     /*
