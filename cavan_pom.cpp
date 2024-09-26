@@ -140,7 +140,7 @@ cavan::pom * cavan::read_pom(jute::view grp, jute::view art, jute::view ver) try
   cavan::whilst("parsing POM of " + grp + ":" + art + ":" + ver);
 }
 
-static auto read_parent(cavan::pom * pom) {
+static auto read_parent(cavan::pom * pom) try {
   jojo::on_error([](void *, jute::view msg) {
     struct io_error {};
     throw io_error {};
@@ -157,6 +157,8 @@ static auto read_parent(cavan::pom * pom) {
     // Ignore and try from repo
   }
   return cavan::read_pom(pom->parent.grp, pom->parent.art, pom->parent.ver);
+} catch (...) {
+  cavan::whilst("reading parent of " + pom->grp + ":" + pom->art + ":" + pom->ver);
 }
 
 void cavan::read_parent_chain(pom * p) try {

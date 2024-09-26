@@ -55,7 +55,7 @@ namespace {
   };
 } // namespace
 
-void cavan::eff_pom(cavan::pom * pom) {
+void cavan::eff_pom(cavan::pom * pom) try {
   cavan::read_parent_chain(pom);
   cavan::merge_props(pom);
 
@@ -66,4 +66,6 @@ void cavan::eff_pom(cavan::pom * pom) {
     if (d.ver.size() == 0) d.ver = dm.ver_of(d);
     d.ver = cavan::apply_props(pom, d.ver);
   }
+} catch (...) {
+  cavan::whilst("calculating effective pom of " + pom->grp + ":" + pom->art + ":" + pom->ver);
 }
