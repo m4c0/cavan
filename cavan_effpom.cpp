@@ -8,7 +8,7 @@ namespace {
     hai::chain<unsigned> m_depths { 1024 };
     hashley::rowan m_idx {};
 
-    void do_pom(cavan::pom * pom, unsigned depth) {
+    void do_pom(cavan::pom * pom, unsigned depth) try {
       for (auto & d : pom->*m_lister) {
         auto key = d.grp + ":" + d.art;
         auto & idx = m_idx[key.cstr()];
@@ -30,6 +30,8 @@ namespace {
 
       if (!pom->ppom) return;
       do_pom(&*pom->ppom, depth + 1);
+    } catch (...) {
+      cavan::whilst("merging dependencies of " + pom->grp + ":" + pom->art + ":" + pom->ver);
     }
 
   public:
