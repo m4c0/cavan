@@ -1,13 +1,14 @@
 module cavan;
 
 void cavan::merge_props(cavan::pom * pom) {
+  auto idx = 0;
+  for (auto [k, _] : pom->props) pom->prop_index[k] = ++idx;
+
   auto * ppom = &*pom->ppom;
   if (!ppom) return;
 
   merge_props(ppom);
 
-  auto idx = 0;
-  for (auto [k, _] : pom->props) pom->prop_index[k] = ++idx;
   for (auto p : ppom->props) {
     auto & i = pom->prop_index[p.key];
     if (i) continue;

@@ -79,7 +79,8 @@ static int compile(char * fname) {
     auto [dir, fn] = jute::view { pom->ppom->filename }.rsplit('/');
     auto cpom = dir + "/" + m + "/pom.xml";
     try {
-      auto _ = cavan::read_pom(cpom.cstr());
+      auto pom = cavan::read_pom(cpom.cstr());
+      cavan::eff_pom(pom);
     } catch (...) {
       cavan::whilst("reading module " + m);
     }

@@ -17,7 +17,7 @@ void cavan::eff_pom(cavan::pom * pom) try {
   }
 
   for (auto & [d, depth] : pom->deps_mgmt) {
-    if (d.scp != "import"_s) continue;
+    if (d.scp != "import"_s || d.typ != "pom"_s) continue;
     if (!d.pom) {
       d.ver = apply_props(pom, d.ver);
       d.pom = read_pom(d.grp, d.art, *d.ver);
