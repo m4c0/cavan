@@ -1,4 +1,5 @@
 export module cavan:depmap;
+import :fail;
 import :objects;
 import hai;
 import hashley;
@@ -19,6 +20,13 @@ namespace cavan {
     [[nodiscard]] constexpr auto end() { return m_list.end(); }
 
     [[nodiscard]] constexpr auto size() const { return m_list.size(); }
+
+    constexpr auto & operator[](const dep & d) const {
+      auto key = d.grp + ":" + d.art;
+      auto idx = m_idx[key.cstr()];
+      if (idx == 0) fail(key + " not found");
+      return m_list.seek(idx - 1);
+    }
 
     void push_back(dep d, unsigned depth = 1) {
       auto & idx = m_idx[(d.grp + ":" + d.art).cstr()];
