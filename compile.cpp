@@ -22,7 +22,7 @@ static auto infer_base_folder(jute::view src) {
 static void add_deps(const auto & tmpnam, cavan::pom * pom, bool test_scope, hai::fn<bool, cavan::dep &> excl) try {
   jute::heap m2repo { jute::view::unsafe(getenv("HOME")) + "/.m2/repository" };
 
-  for (auto & d : pom->deps) {
+  for (auto & [d, _] : pom->deps) {
     if (excl(d)) continue;
     if (d.cls != "jar"_s && d.cls != ""_s) continue;
     if (test_scope && d.scp != "test"_s && d.scp != "compile"_s) continue;

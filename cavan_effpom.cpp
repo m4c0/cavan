@@ -9,7 +9,7 @@ namespace {
     hashley::rowan m_idx {};
 
     void do_pom(cavan::pom * pom, unsigned depth) try {
-      for (auto & d : pom->*m_lister) {
+      for (auto & [d, _] : pom->*m_lister) {
         auto key = d.grp + ":" + d.art;
         auto & idx = m_idx[key.cstr()];
         if (idx && m_depths.seek(idx - 1) <= depth) continue;
@@ -38,7 +38,7 @@ namespace {
     explicit dep_map(cavan::pom * pom, cavan::deps(cavan::pom::*list)) {
       m_lister = list;
       m_list = &(pom->*list);
-      for (auto & d : *m_list) {
+      for (auto & [d, _] : *m_list) {
         m_depths.push_back(1);
 
         auto key = d.grp + ":" + d.art;
@@ -64,7 +64,7 @@ void cavan::eff_pom(cavan::pom * pom) try {
   dep_map dm { pom, &cavan::pom::deps_mgmt };
   dep_map { pom, &cavan::pom::deps };
 
-  for (auto & d : pom->deps) {
+  for (auto & [d, _] : pom->deps) {
     if (d.ver.size() == 0) d.ver = dm.ver_of(d);
     d.ver = cavan::apply_props(pom, d.ver);
   }

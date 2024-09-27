@@ -75,7 +75,7 @@ static dep take_dep(const token *& t) try {
 }
 
 deps cavan::list_deps(const token *& t) {
-  deps res { 128 };
+  deps res {};
   take_if(t, "dependencies", [&] {
     if (!match(*t, T_OPEN_TAG, "dependency")) return;
 
