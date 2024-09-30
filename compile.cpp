@@ -29,7 +29,6 @@ static void add_deps(const auto & tmpnam, cavan::pom * pom, bool test_scope, hai
     if (!test_scope && d.scp != "compile"_s) continue;
 
     auto dpom = cavan::read_pom(d.grp, d.art, *d.ver);
-    cavan::eff_pom(dpom);
 
     jute::view dpom_fn { dpom->filename };
     if (!dpom_fn.starts_with(*m2repo)) {
@@ -50,16 +49,15 @@ static void add_deps(const auto & tmpnam, cavan::pom * pom, bool test_scope, hai
     jojo::append(tmpnam, ":"_hs + jar);
 
     // TODO: dependency recursion?
-    // TODO: "reactor"?
 
-    /*
+    if (!d.exc) continue;
+
     hashley::rowan exc {};
     for (auto [g, a] : *d.exc) exc[(g + ":" + a).cstr()] = 1;
     add_deps(tmpnam, dpom, test_scope, [&exc, &excl](auto & d) {
       if (exc[(d.grp + ":" + d.art).cstr()]) return true;
       return excl(d);
     });
-    */
   }
 } catch (...) {
   cavan::whilst("processing dependencies of " + pom->grp + ":" + pom->art + ":" + pom->ver);
