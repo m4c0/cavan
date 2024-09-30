@@ -8,6 +8,7 @@ void cavan::eff_pom(cavan::pom * pom) try {
   if (pom->ppom) {
     eff_pom(pom->ppom);
 
+    // TODO: avoid copy, this adds up quickly
     for (auto & [d, depth] : pom->ppom->deps_mgmt) {
       pom->deps_mgmt.push_back(d, depth + 1);
     }
