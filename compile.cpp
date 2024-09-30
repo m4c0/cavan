@@ -64,9 +64,12 @@ static void add_deps(const auto & tmpnam, cavan::pom * pom, bool test_scope, hai
 }
 
 static int compile(char * fname) {
+  bool test_scope = strstr(fname, "src/test/");
+
   auto src = jute::view::unsafe(fname);
   auto base = infer_base_folder(src);
   auto tgt = base + "/target/classes";
+  auto tst_tgt = base + "/target/test-classes";
   auto pom_file = (base + "/pom.xml").cstr();
   auto tmpnam = (base + "/target/cavan-compile.args").cstr();
 
@@ -84,10 +87,9 @@ static int compile(char * fname) {
     }
   }
 
-  jojo::write(tmpnam, "-d "_hs + tgt + "\n");
+  jojo::write(tmpnam, "-d "_hs + (test_scope ? tst_tgt : tgt) + "\n");
   jojo::append(tmpnam, "-cp "_hs + tgt);
-
-  bool test_scope = strstr(fname, "src/test/");
+  if (test_scope) jojo::append(tmpnam, ":"_hs + tst_tgt);
 
   add_deps(tmpnam, pom, test_scope, [](auto &) { return false; });
 
