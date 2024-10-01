@@ -13,7 +13,7 @@ namespace cavan {
     };
 
     hai::chain<pair> m_list { 128 };
-    hashley::rowan m_idx {};
+    hashley::niamh m_idx { 1103 };
 
   public:
     [[nodiscard]] constexpr auto begin() { return m_list.begin(); }
