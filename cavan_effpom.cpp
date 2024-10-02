@@ -36,6 +36,8 @@ void cavan::eff_pom(cavan::pom * pom) try {
       if (!d.exc) d.exc = dm.exc;
       if (d.ver.size() == 0) d.ver = dm.ver;
     }
+  }
+  for (auto & [d, _] : pom->deps_mgmt) {
     d.ver = cavan::apply_props(pom, d.ver);
   }
 
