@@ -20,7 +20,8 @@ static void run(jute::view fname) {
       }
   }
   for (auto & [d, _] : pom->deps) {
-    silog::log(silog::info, "dep -- %s:%s:%s", d.grp.cstr().begin(), d.art.cstr().begin(), (*d.ver).cstr().begin());
+    silog::log(silog::info, "dep -- %s:%s:%s:%s:%s", d.grp.cstr().begin(), d.art.cstr().begin(),
+               (*d.ver).cstr().begin(), d.scp.cstr().begin(), d.typ.cstr().begin());
     if (d.exc)
       for (auto & [g, a] : *d.exc) {
         silog::log(silog::info, "    excl -- %s:%s", g.cstr().begin(), a.cstr().begin());

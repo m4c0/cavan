@@ -21,6 +21,10 @@ namespace cavan {
 
     [[nodiscard]] constexpr auto size() const { return m_list.size(); }
 
+    constexpr bool has(const dep & d) const {
+      auto key = d.grp + ":" + d.art;
+      return 0 != m_idx[key.cstr()];
+    }
     constexpr auto & operator[](const dep & d) const {
       auto key = d.grp + ":" + d.art;
       auto idx = m_idx[key.cstr()];
