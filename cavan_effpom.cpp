@@ -30,7 +30,11 @@ void cavan::eff_pom(cavan::pom * pom) try {
   }
 
   for (auto & [d, _] : pom->deps) {
-    if (d.ver.size() == 0) d.ver = pom->deps_mgmt[d].dep.ver;
+    auto & [dm, depth] = pom->deps_mgmt[d];
+
+    if (!d.exc) d.exc = dm.exc;
+
+    if (d.ver.size() == 0) d.ver = dm.ver;
     d.ver = cavan::apply_props(pom, d.ver);
   }
 
