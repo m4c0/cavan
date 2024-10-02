@@ -86,7 +86,7 @@ static cavan::pom parse_pom(const cavan::tokens & ts) {
 
   auto * t = ts.begin();
 
-  if (!match(*t++, T_DIRECTIVE, "xml")) fail("missing <?xml?> directive");
+  if (match(*t, T_DIRECTIVE, "xml")) t++;
 
   cavan::pom res {};
   take(t, "project", [&] { parse_project(t, res); });
