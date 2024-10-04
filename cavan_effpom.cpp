@@ -1,12 +1,10 @@
 module cavan;
 
-void cavan::eff_pom(cavan::pom * pom) try {
-  if (pom->effective) return;
-
+static void merge_parent_chain(cavan::pom * pom) try {
   read_parent_chain(pom);
   merge_props(pom);
   if (pom->ppom) {
-    eff_pom(pom->ppom);
+    merge_parent_chain(pom->ppom);
 
     // TODO: avoid copy, this adds up quickly
     for (auto & [d, depth] : pom->ppom->deps_mgmt) {
@@ -16,6 +14,14 @@ void cavan::eff_pom(cavan::pom * pom) try {
       pom->deps.push_back(d, depth + 1);
     }
   }
+} catch (...) {
+  cavan::whilst("merging chain of deps for pom of " + pom->grp + ":" + pom->art + ":" + pom->ver);
+}
+
+void cavan::eff_pom(cavan::pom * pom) try {
+  if (pom->effective) return;
+
+  merge_parent_chain(pom);
 
   for (auto & [d, depth] : pom->deps_mgmt) {
     if (d.scp != "import"_s || d.typ != "pom"_s) continue;
