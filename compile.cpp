@@ -7,6 +7,7 @@ import hai;
 import hashley;
 import jojo;
 import jute;
+import silog;
 
 using namespace jute::literals;
 
@@ -107,6 +108,8 @@ static int compile(char * fname) {
   auto pom_file = (base + "/pom.xml").cstr();
   auto tmpnam = (base + "/target/cavan-compile.args").cstr();
 
+  silog::trace("processing", pom_file);
+
   auto pom = cavan::read_pom(pom_file);
   cavan::eff_pom(pom);
 
@@ -132,6 +135,7 @@ static int compile(char * fname) {
   jojo::append(tmpnam, "\n"_hs);
   jojo::append(tmpnam, src);
 
+  silog::trace("compiling", tmpnam);
   auto cmd = ("javac @"_s + tmpnam).cstr();
   return system(cmd.begin());
 }
