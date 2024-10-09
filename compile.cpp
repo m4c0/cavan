@@ -14,8 +14,9 @@ static const jute::heap m2repo { jute::view::unsafe(getenv("HOME")) + "/.m2/repo
 
 class context {
   cavan::deps * m_deps {};
+  hai::fn<bool, cavan::dep &> m_excl = [](auto &) { return false; };
 
-  void add_dep(const cavan::dep & d, unsigned depth, bool test_scope, hai::fn<bool, cavan::dep &> excl) try {
+  void add_dep(const cavan::dep & d, unsigned depth, bool test_scope) try {
     if (d.cls != "jar"_s && d.cls != ""_s) return;
     if (test_scope && d.scp != "test"_s && d.scp != "compile"_s) return;
     if (!test_scope && d.scp != "compile"_s) return;
@@ -26,29 +27,31 @@ class context {
     m_deps->push_back(d, depth);
 
     return;
-    hashley::rowan exc {};
-    if (d.exc)
+
+    hashley::niamh exc { 27 };
+    if (d.exc) {
       for (auto [g, a] : *d.exc) exc[(g + ":" + a).cstr()] = 1;
-    add_deps(dpom, false, [&exc, &excl](auto & d) {
-      if (exc[(d.grp + ":" + d.art).cstr()]) return true;
-      return excl(d);
-    });
+    }
+
+    context ctx { m_deps };
+    ctx.m_excl = [&](auto & d) {
+      auto key = (d.grp + ":" + d.art).cstr();
+      if (exc[key]) return true;
+      return m_excl(d);
+    };
+    ctx.add_deps(dpom, false);
   } catch (...) {
     cavan::whilst("processing dependency " + d.grp + ":" + d.art + ":" + *d.ver);
-  }
-
-  void add_deps(cavan::pom * pom, bool test_scope, hai::fn<bool, cavan::dep &> excl) {
-    for (auto & [d, depth] : pom->deps) {
-      if (excl(d)) continue;
-      add_dep(d, depth, test_scope, excl);
-    }
   }
 
 public:
   explicit constexpr context(cavan::deps * ds) : m_deps { ds } {}
 
   void add_deps(cavan::pom * pom, bool test_scope) {
-    add_deps(pom, test_scope, [](auto &) { return false; });
+    for (auto & [d, depth] : pom->deps) {
+      if (m_excl(d)) continue;
+      add_dep(d, depth, test_scope);
+    }
   }
 };
 
