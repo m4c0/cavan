@@ -28,13 +28,13 @@ static void run(jute::view fname) {
 
     silog::log(silog::info, "found %d managed dependencies", pom->deps_mgmt.size());
     for (auto & [d, _] : pom->deps_mgmt) {
-      silog::log(silog::info, "- %10s %s:%s:%s", d.scp.cstr().begin(), d.grp.cstr().begin(), d.art.cstr().begin(),
+      silog::log(silog::info, "- %10s %s:%s:%s", d.scp.cstr().begin(), (*d.grp).cstr().begin(), d.art.cstr().begin(),
                  (*d.ver).cstr().begin());
     }
 
     silog::log(silog::info, "found %d dependencies", pom->deps.size());
     for (auto & [d, _] : pom->deps) {
-      silog::log(silog::info, "- %10s %s:%s:%s", d.scp.cstr().begin(), d.grp.cstr().begin(), d.art.cstr().begin(),
+      silog::log(silog::info, "- %10s %s:%s:%s", d.scp.cstr().begin(), (*d.grp).cstr().begin(), d.art.cstr().begin(),
                  (*d.ver).cstr().begin());
     }
 

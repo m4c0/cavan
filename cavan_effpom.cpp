@@ -30,9 +30,11 @@ static void update_deps_versions(cavan::pom * pom) try {
       d.opt |= dm.opt;
     }
     if (d.scp == "") d.scp = "compile";
+    d.grp = cavan::apply_props(pom, d.grp);
     d.ver = cavan::apply_props(pom, d.ver);
   }
   for (auto & [d, _] : pom->deps_mgmt) {
+    d.grp = cavan::apply_props(pom, d.grp);
     d.ver = cavan::apply_props(pom, d.ver);
   }
 } catch (...) {
@@ -44,7 +46,7 @@ static void apply_imports(cavan::pom * pom) try {
     if (d.scp != "import"_s || d.typ != "pom"_s) continue;
     if (!d.pom) {
       d.ver = apply_props(pom, d.ver);
-      d.pom = cavan::read_pom(d.grp, d.art, *d.ver);
+      d.pom = cavan::read_pom(*d.grp, d.art, *d.ver);
       eff_pom(d.pom);
     }
     for (auto & [id, idepth] : d.pom->deps_mgmt) {

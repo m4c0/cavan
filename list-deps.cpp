@@ -17,7 +17,7 @@ static void run(jute::view fname) {
   silog::log(silog::info, "found %d dependencies", deps.size());
 
   for (auto & [d, _] : deps) {
-    silog::log(silog::debug, "%s:%s:%s:%s", d.grp.cstr().begin(), d.art.cstr().begin(), (*d.ver).cstr().begin(),
+    silog::log(silog::debug, "%s:%s:%s:%s", (*d.grp).cstr().begin(), d.art.cstr().begin(), (*d.ver).cstr().begin(),
                d.scp.cstr().begin());
   }
 }

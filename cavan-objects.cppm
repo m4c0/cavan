@@ -26,7 +26,7 @@ namespace cavan {
 
   export struct pom;
   export struct dep {
-    jute::view grp {};
+    jute::heap grp {};
     jute::view art {};
     jute::heap ver {};
     jute::view typ { "jar" };

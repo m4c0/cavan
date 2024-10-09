@@ -18,12 +18,10 @@ class context {
   hai::fn<const cavan::dep &, const cavan::dep &> m_dm = [](auto & d) -> auto & { return d; };
 
   void add_dep(const cavan::dep & d, unsigned depth) try {
-    auto dpom = cavan::read_pom(d.grp, d.art, *d.ver);
+    auto dpom = cavan::read_pom(*d.grp, d.art, *d.ver);
     cavan::eff_pom(dpom);
 
     m_deps->push_back(d, depth);
-
-    return;
 
     hashley::niamh exc { 27 };
     if (d.exc) {
@@ -32,8 +30,8 @@ class context {
 
     context ctx { m_deps };
     ctx.m_excl = [&](auto & d) {
-      auto key = (d.grp + ":" + d.art).cstr();
-      if (exc[key]) return true;
+      auto key = d.grp + ":" + d.art;
+      if (exc[*key]) return true;
       return m_excl(d);
     };
     ctx.m_dm = [&](auto & d) -> auto & {
@@ -42,7 +40,7 @@ class context {
     };
     ctx.add_deps(dpom, false);
   } catch (...) {
-    cavan::whilst("processing dependency " + d.grp + ":" + d.art + ":" + *d.ver);
+    cavan::whilst("processing dependency " + *d.grp + ":" + d.art + ":" + *d.ver);
   }
 
   void add_deps(cavan::pom * pom, bool test_scope) {
@@ -79,7 +77,7 @@ static auto infer_base_folder(jute::view src) {
 }
 
 static void output_dep(const auto & tmpnam, const cavan::dep & d) {
-  auto dpom = cavan::read_pom(d.grp, d.art, *d.ver);
+  auto dpom = cavan::read_pom(*d.grp, d.art, *d.ver);
   jute::view dpom_fn { dpom->filename };
   if (!dpom_fn.starts_with(*m2repo)) {
     auto [dir, fn] = dpom_fn.rsplit('/');
@@ -88,7 +86,7 @@ static void output_dep(const auto & tmpnam, const cavan::dep & d) {
   }
 
   auto jar = m2repo;
-  auto grp = d.grp;
+  auto grp = *d.grp;
   while (grp.size() > 0) {
     auto [l, r] = grp.split('.');
     jar = jar + "/" + l;

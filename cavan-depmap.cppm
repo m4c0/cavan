@@ -25,17 +25,17 @@ namespace cavan {
 
     constexpr bool has(const dep & d) const {
       auto key = d.grp + ":" + d.art;
-      return 0 != m_idx[key.cstr()];
+      return 0 != m_idx[*key];
     }
     constexpr auto & operator[](const dep & d) const {
       auto key = d.grp + ":" + d.art;
-      auto idx = m_idx[key.cstr()];
-      if (idx == 0) fail(key + " not found");
+      auto idx = m_idx[*key];
+      if (idx == 0) fail(*key + " not found");
       return m_list.seek(idx - 1);
     }
 
     void push_back(dep d, unsigned depth = 1) {
-      auto & idx = m_idx[(d.grp + ":" + d.art).cstr()];
+      auto & idx = m_idx[*(d.grp + ":" + d.art)];
 
       if (!idx) {
         m_list.push_back({ d, depth });
