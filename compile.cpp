@@ -10,18 +10,9 @@ import jute;
 
 using namespace jute::literals;
 
-static auto infer_base_folder(jute::view src) {
-  while (src != "") {
-    auto [l, r] = src.rsplit('/');
-    if (r == "src") return l;
-    src = l;
-  }
-  cavan::fail("file not in maven repo");
-}
+static const jute::heap m2repo { jute::view::unsafe(getenv("HOME")) + "/.m2/repository" };
 
 static void add_deps(const auto & tmpnam, cavan::pom * pom, bool test_scope, hai::fn<bool, cavan::dep &> excl) try {
-  jute::heap m2repo { jute::view::unsafe(getenv("HOME")) + "/.m2/repository" };
-
   for (auto & [d, _] : pom->deps) {
     if (excl(d)) continue;
     if (d.cls != "jar"_s && d.cls != ""_s) continue;
@@ -62,6 +53,15 @@ static void add_deps(const auto & tmpnam, cavan::pom * pom, bool test_scope, hai
   }
 } catch (...) {
   cavan::whilst("processing dependencies of " + pom->grp + ":" + pom->art + ":" + pom->ver);
+}
+
+static auto infer_base_folder(jute::view src) {
+  while (src != "") {
+    auto [l, r] = src.rsplit('/');
+    if (r == "src") return l;
+    src = l;
+  }
+  cavan::fail("file not in maven repo");
 }
 
 static int compile(char * fname) {
