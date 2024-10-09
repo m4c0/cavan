@@ -47,7 +47,7 @@ class context {
     for (auto & [d, depth] : pom->deps) {
       if (m_deps->has(d)) continue;
       if (m_excl(d)) continue;
-      if (d.opt) return;
+      if (d.opt) continue;
       if (d.cls != "jar"_s && d.cls != ""_s) continue;
       if (test_scope && d.scp != "test"_s && d.scp != "compile"_s) continue;
       if (!test_scope && d.scp != "compile"_s) continue;
