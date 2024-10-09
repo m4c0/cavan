@@ -15,12 +15,9 @@ static const jute::heap m2repo { jute::view::unsafe(getenv("HOME")) + "/.m2/repo
 class context {
   cavan::deps * m_deps {};
   hai::fn<bool, cavan::dep &> m_excl = [](auto &) { return false; };
+  hai::fn<const cavan::dep &, const cavan::dep &> m_dm = [](auto & d) -> auto & { return d; };
 
-  void add_dep(const cavan::dep & d, unsigned depth, bool test_scope) try {
-    if (d.cls != "jar"_s && d.cls != ""_s) return;
-    if (test_scope && d.scp != "test"_s && d.scp != "compile"_s) return;
-    if (!test_scope && d.scp != "compile"_s) return;
-
+  void add_dep(const cavan::dep & d, unsigned depth) try {
     auto dpom = cavan::read_pom(d.grp, d.art, *d.ver);
     cavan::eff_pom(dpom);
 
@@ -39,19 +36,34 @@ class context {
       if (exc[key]) return true;
       return m_excl(d);
     };
+    ctx.m_dm = [&](auto & d) -> auto & {
+      if (dpom->deps_mgmt.has(d)) return m_dm(dpom->deps_mgmt[d].dep);
+      return m_dm(d);
+    };
     ctx.add_deps(dpom, false);
   } catch (...) {
     cavan::whilst("processing dependency " + d.grp + ":" + d.art + ":" + *d.ver);
   }
 
-public:
-  explicit constexpr context(cavan::deps * ds) : m_deps { ds } {}
-
   void add_deps(cavan::pom * pom, bool test_scope) {
     for (auto & [d, depth] : pom->deps) {
       if (m_excl(d)) continue;
-      add_dep(d, depth, test_scope);
+      if (d.cls != "jar"_s && d.cls != ""_s) return;
+      if (test_scope && d.scp != "test"_s && d.scp != "compile"_s) return;
+      if (!test_scope && d.scp != "compile"_s) return;
+      add_dep(m_dm(d), depth);
     }
+  }
+
+public:
+  explicit constexpr context(cavan::deps * ds) : m_deps { ds } {}
+
+  void add_pom(cavan::pom * pom, bool test_scope) {
+    m_dm = [&](auto & d) -> auto & {
+      if (pom->deps_mgmt.has(d)) return pom->deps_mgmt[d].dep;
+      return d;
+    };
+    add_deps(pom, test_scope);
   }
 };
 
@@ -114,7 +126,7 @@ static int compile(char * fname) {
   if (test_scope) jojo::append(tmpnam, ":"_hs + tst_tgt);
 
   cavan::deps deps {};
-  context { &deps }.add_deps(pom, test_scope);
+  context { &deps }.add_pom(pom, test_scope);
   for (auto & [d, _] : deps) output_dep(tmpnam, d);
 
   jojo::append(tmpnam, "\n"_hs);
