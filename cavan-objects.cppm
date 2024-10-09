@@ -30,7 +30,7 @@ namespace cavan {
     jute::view art {};
     jute::heap ver {};
     jute::view typ { "jar" };
-    jute::view scp { "compile" };
+    jute::view scp {};
     jute::view cls {};
     bool opt {};
     hai::sptr<hai::chain<excl>> exc {};

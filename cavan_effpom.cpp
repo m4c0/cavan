@@ -23,11 +23,13 @@ static void update_deps_versions(cavan::pom * pom) try {
     if (pom->deps_mgmt.has(d)) {
       auto & [dm, depth] = pom->deps_mgmt[d];
 
+      if (d.scp == "") d.scp = dm.scp;
       if (!d.exc) d.exc = dm.exc;
       if (d.ver.size() == 0) d.ver = dm.ver;
 
       d.opt |= dm.opt;
     }
+    if (d.scp == "") d.scp = "compile";
     d.ver = cavan::apply_props(pom, d.ver);
   }
   for (auto & [d, _] : pom->deps_mgmt) {
