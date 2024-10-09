@@ -13,7 +13,7 @@ using namespace jute::literals;
 static const jute::heap m2repo { jute::view::unsafe(getenv("HOME")) + "/.m2/repository" };
 
 class context {
-  cavan::deps m_deps {};
+  cavan::deps * m_deps {};
 
   void add_dep(const cavan::dep & d, unsigned depth, bool test_scope, hai::fn<bool, cavan::dep &> excl) try {
     if (d.cls != "jar"_s && d.cls != ""_s) return;
@@ -23,7 +23,7 @@ class context {
     auto dpom = cavan::read_pom(d.grp, d.art, *d.ver);
     cavan::eff_pom(dpom);
 
-    m_deps.push_back(d, depth);
+    m_deps->push_back(d, depth);
 
     return;
     hashley::rowan exc {};
@@ -45,31 +45,10 @@ class context {
   }
 
 public:
+  explicit constexpr context(cavan::deps * ds) : m_deps { ds } {}
+
   void add_deps(cavan::pom * pom, bool test_scope) {
     add_deps(pom, test_scope, [](auto &) { return false; });
-  }
-
-  void output(const auto & tmpnam) {
-    for (auto & [d, _] : m_deps) {
-      auto dpom = cavan::read_pom(d.grp, d.art, *d.ver);
-      jute::view dpom_fn { dpom->filename };
-      if (!dpom_fn.starts_with(*m2repo)) {
-        auto [dir, fn] = dpom_fn.rsplit('/');
-        jojo::append(tmpnam, ":"_hs + dir + "/target/classes");
-        continue;
-      }
-
-      auto jar = m2repo;
-      auto grp = d.grp;
-      while (grp.size() > 0) {
-        auto [l, r] = grp.split('.');
-        jar = jar + "/" + l;
-        grp = r;
-      }
-      jar = jar + "/" + d.art + "/" + d.ver + "/" + d.art + "-" + d.ver + "." + d.typ;
-
-      jojo::append(tmpnam, ":"_hs + jar);
-    }
   }
 };
 
@@ -80,6 +59,27 @@ static auto infer_base_folder(jute::view src) {
     src = l;
   }
   cavan::fail("file not in maven repo");
+}
+
+static void output_dep(const auto & tmpnam, const cavan::dep & d) {
+  auto dpom = cavan::read_pom(d.grp, d.art, *d.ver);
+  jute::view dpom_fn { dpom->filename };
+  if (!dpom_fn.starts_with(*m2repo)) {
+    auto [dir, fn] = dpom_fn.rsplit('/');
+    jojo::append(tmpnam, ":"_hs + dir + "/target/classes");
+    return;
+  }
+
+  auto jar = m2repo;
+  auto grp = d.grp;
+  while (grp.size() > 0) {
+    auto [l, r] = grp.split('.');
+    jar = jar + "/" + l;
+    grp = r;
+  }
+  jar = jar + "/" + d.art + "/" + d.ver + "/" + d.art + "-" + d.ver + "." + d.typ;
+
+  jojo::append(tmpnam, ":"_hs + jar);
 }
 
 static int compile(char * fname) {
@@ -110,9 +110,9 @@ static int compile(char * fname) {
   jojo::append(tmpnam, "-cp "_hs + tgt);
   if (test_scope) jojo::append(tmpnam, ":"_hs + tst_tgt);
 
-  context ctx {};
-  ctx.add_deps(pom, test_scope);
-  ctx.output(tmpnam);
+  cavan::deps deps {};
+  context { &deps }.add_deps(pom, test_scope);
+  for (auto & [d, _] : deps) output_dep(tmpnam, d);
 
   jojo::append(tmpnam, "\n"_hs);
   jojo::append(tmpnam, src);
