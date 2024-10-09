@@ -38,7 +38,7 @@ namespace cavan {
 
     hai::chain<jute::view> modules {};
 
-    hashley::rowan prop_index {};
+    hashley::niamh prop_index { 173 };
     bool effective {};
   };
 
