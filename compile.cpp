@@ -47,10 +47,12 @@ class context {
 
   void add_deps(cavan::pom * pom, bool test_scope) {
     for (auto & [d, depth] : pom->deps) {
+      if (m_deps->has(d)) continue;
       if (m_excl(d)) continue;
-      if (d.cls != "jar"_s && d.cls != ""_s) return;
-      if (test_scope && d.scp != "test"_s && d.scp != "compile"_s) return;
-      if (!test_scope && d.scp != "compile"_s) return;
+      if (d.opt) return;
+      if (d.cls != "jar"_s && d.cls != ""_s) continue;
+      if (test_scope && d.scp != "test"_s && d.scp != "compile"_s) continue;
+      if (!test_scope && d.scp != "compile"_s) continue;
       add_dep(m_dm(d), depth);
     }
   }
