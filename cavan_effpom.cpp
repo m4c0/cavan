@@ -25,6 +25,8 @@ static void update_deps_versions(cavan::pom * pom) try {
 
       if (!d.exc) d.exc = dm.exc;
       if (d.ver.size() == 0) d.ver = dm.ver;
+
+      d.opt |= dm.opt;
     }
     d.ver = cavan::apply_props(pom, d.ver);
   }
