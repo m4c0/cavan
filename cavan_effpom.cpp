@@ -18,23 +18,7 @@ static void merge_parent_chain(cavan::pom * pom) try {
   cavan::whilst("merging chain of deps for pom of " + pom->grp + ":" + pom->art + ":" + pom->ver);
 }
 
-void cavan::eff_pom(cavan::pom * pom) try {
-  if (pom->effective) return;
-
-  merge_parent_chain(pom);
-
-  for (auto & [d, depth] : pom->deps_mgmt) {
-    if (d.scp != "import"_s || d.typ != "pom"_s) continue;
-    if (!d.pom) {
-      d.ver = apply_props(pom, d.ver);
-      d.pom = read_pom(d.grp, d.art, *d.ver);
-      eff_pom(d.pom);
-    }
-    for (auto & [id, idepth] : d.pom->deps_mgmt) {
-      pom->deps_mgmt.push_back(id, depth + idepth);
-    }
-  }
-
+static void update_deps_versions(cavan::pom * pom) try {
   for (auto & [d, _] : pom->deps) {
     if (pom->deps_mgmt.has(d)) {
       auto & [dm, depth] = pom->deps_mgmt[d];
@@ -47,6 +31,32 @@ void cavan::eff_pom(cavan::pom * pom) try {
   for (auto & [d, _] : pom->deps_mgmt) {
     d.ver = cavan::apply_props(pom, d.ver);
   }
+} catch (...) {
+  cavan::whilst("calculating dependencies versions for pom of " + pom->grp + ":" + pom->art + ":" + pom->ver);
+}
+
+static void apply_imports(cavan::pom * pom) try {
+  for (auto & [d, depth] : pom->deps_mgmt) {
+    if (d.scp != "import"_s || d.typ != "pom"_s) continue;
+    if (!d.pom) {
+      d.ver = apply_props(pom, d.ver);
+      d.pom = cavan::read_pom(d.grp, d.art, *d.ver);
+      eff_pom(d.pom);
+    }
+    for (auto & [id, idepth] : d.pom->deps_mgmt) {
+      pom->deps_mgmt.push_back(id, depth + idepth);
+    }
+  }
+} catch (...) {
+  cavan::whilst("applying imported dependencies for pom of " + pom->grp + ":" + pom->art + ":" + pom->ver);
+}
+
+void cavan::eff_pom(cavan::pom * pom) try {
+  if (pom->effective) return;
+
+  merge_parent_chain(pom);
+  apply_imports(pom);
+  update_deps_versions(pom);
 
   pom->effective = true;
 } catch (...) {
