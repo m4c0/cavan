@@ -93,6 +93,8 @@ static cavan::pom parse_pom(const cavan::tokens & ts) {
 
   if (res.grp.size() == 0) res.grp = res.parent.grp;
   if (res.ver.size() == 0) res.ver = res.parent.ver;
+
+  res.props.push_back({ "project.version", res.ver });
   return res;
 }
 
