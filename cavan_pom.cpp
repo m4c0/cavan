@@ -9,7 +9,7 @@ import silog;
 
 static class {
   hai::chain<cavan::pom> m_buffer { 1024 };
-  hashley::rowan m_idx {};
+  hashley::niamh m_idx { 7919 };
 
 public:
   cavan::pom * take(cavan::pom p) {
