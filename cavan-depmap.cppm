@@ -18,6 +18,8 @@ namespace cavan {
   public:
     [[nodiscard]] constexpr auto begin() { return m_list.begin(); }
     [[nodiscard]] constexpr auto end() { return m_list.end(); }
+    [[nodiscard]] constexpr auto begin() const { return m_list.begin(); }
+    [[nodiscard]] constexpr auto end() const { return m_list.end(); }
 
     [[nodiscard]] constexpr auto size() const { return m_list.size(); }
 

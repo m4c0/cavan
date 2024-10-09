@@ -12,48 +12,66 @@ using namespace jute::literals;
 
 static const jute::heap m2repo { jute::view::unsafe(getenv("HOME")) + "/.m2/repository" };
 
-static void add_deps(const auto & tmpnam, cavan::pom * pom, bool test_scope, hai::fn<bool, cavan::dep &> excl) try {
-  for (auto & [d, _] : pom->deps) {
-    if (excl(d)) continue;
-    if (d.cls != "jar"_s && d.cls != ""_s) continue;
-    if (test_scope && d.scp != "test"_s && d.scp != "compile"_s) continue;
-    if (!test_scope && d.scp != "compile"_s) continue;
+class context {
+  cavan::deps m_deps {};
+
+  void add_dep(const cavan::dep & d, unsigned depth, bool test_scope, hai::fn<bool, cavan::dep &> excl) try {
+    if (d.cls != "jar"_s && d.cls != ""_s) return;
+    if (test_scope && d.scp != "test"_s && d.scp != "compile"_s) return;
+    if (!test_scope && d.scp != "compile"_s) return;
 
     auto dpom = cavan::read_pom(d.grp, d.art, *d.ver);
     cavan::eff_pom(dpom);
 
-    jute::view dpom_fn { dpom->filename };
-    if (!dpom_fn.starts_with(*m2repo)) {
-      auto [dir, fn] = dpom_fn.rsplit('/');
-      jojo::append(tmpnam, ":"_hs + dir + "/target/classes");
-      continue;
-    }
+    m_deps.push_back(d, depth);
 
-    auto jar = m2repo;
-    auto grp = d.grp;
-    while (grp.size() > 0) {
-      auto [l, r] = grp.split('.');
-      jar = jar + "/" + l;
-      grp = r;
-    }
-    jar = jar + "/" + d.art + "/" + d.ver + "/" + d.art + "-" + d.ver + "." + d.typ;
-
-    jojo::append(tmpnam, ":"_hs + jar);
-
-    // TODO: dependency recursion?
-
-    if (!d.exc) continue;
-
+    return;
     hashley::rowan exc {};
-    for (auto [g, a] : *d.exc) exc[(g + ":" + a).cstr()] = 1;
-    add_deps(tmpnam, dpom, false, [&exc, &excl](auto & d) {
+    if (d.exc)
+      for (auto [g, a] : *d.exc) exc[(g + ":" + a).cstr()] = 1;
+    add_deps(dpom, false, [&exc, &excl](auto & d) {
       if (exc[(d.grp + ":" + d.art).cstr()]) return true;
       return excl(d);
     });
+  } catch (...) {
+    cavan::whilst("processing dependency " + d.grp + ":" + d.art + ":" + *d.ver);
   }
-} catch (...) {
-  cavan::whilst("processing dependencies of " + pom->grp + ":" + pom->art + ":" + pom->ver);
-}
+
+  void add_deps(cavan::pom * pom, bool test_scope, hai::fn<bool, cavan::dep &> excl) {
+    for (auto & [d, depth] : pom->deps) {
+      if (excl(d)) continue;
+      add_dep(d, depth, test_scope, excl);
+    }
+  }
+
+public:
+  void add_deps(cavan::pom * pom, bool test_scope) {
+    add_deps(pom, test_scope, [](auto &) { return false; });
+  }
+
+  void output(const auto & tmpnam) {
+    for (auto & [d, _] : m_deps) {
+      auto dpom = cavan::read_pom(d.grp, d.art, *d.ver);
+      jute::view dpom_fn { dpom->filename };
+      if (!dpom_fn.starts_with(*m2repo)) {
+        auto [dir, fn] = dpom_fn.rsplit('/');
+        jojo::append(tmpnam, ":"_hs + dir + "/target/classes");
+        continue;
+      }
+
+      auto jar = m2repo;
+      auto grp = d.grp;
+      while (grp.size() > 0) {
+        auto [l, r] = grp.split('.');
+        jar = jar + "/" + l;
+        grp = r;
+      }
+      jar = jar + "/" + d.art + "/" + d.ver + "/" + d.art + "-" + d.ver + "." + d.typ;
+
+      jojo::append(tmpnam, ":"_hs + jar);
+    }
+  }
+};
 
 static auto infer_base_folder(jute::view src) {
   while (src != "") {
@@ -92,7 +110,9 @@ static int compile(char * fname) {
   jojo::append(tmpnam, "-cp "_hs + tgt);
   if (test_scope) jojo::append(tmpnam, ":"_hs + tst_tgt);
 
-  add_deps(tmpnam, pom, test_scope, [](auto &) { return false; });
+  context ctx {};
+  ctx.add_deps(pom, test_scope);
+  ctx.output(tmpnam);
 
   jojo::append(tmpnam, "\n"_hs);
   jojo::append(tmpnam, src);
