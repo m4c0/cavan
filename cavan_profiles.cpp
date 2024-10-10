@@ -3,7 +3,9 @@ import silog;
 
 static bool take_property(const cavan::token *& t) {
   jute::view name;
-  take_tag("name", t, &name);
+  jute::view value;
+  if (match(*t, cavan::T_OPEN_TAG, "name")) take_tag("name", t, &name);
+  if (match(*t, cavan::T_OPEN_TAG, "value")) take_tag("value", t, &value);
 
   if (!name.size()) return false;
 
