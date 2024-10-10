@@ -68,15 +68,6 @@ public:
   }
 };
 
-static auto infer_base_folder(jute::view src) {
-  while (src != "") {
-    auto [l, r] = src.rsplit('/');
-    if (r == "src") return l;
-    src = l;
-  }
-  cavan::fail("file not in maven repo");
-}
-
 static void output_dep(const auto & tmpnam, const cavan::dep & d) {
   auto dpom = cavan::read_pom(*d.grp, d.art, *d.ver);
   jute::view dpom_fn { dpom->filename };
@@ -98,17 +89,14 @@ static void output_dep(const auto & tmpnam, const cavan::dep & d) {
   jojo::append(tmpnam, ":"_hs + jar);
 }
 
-static int compile(char * fname) {
-  bool test_scope = strstr(fname, "src/test/");
+static int compile(jute::view src, bool test_scope) {
+  auto base = cavan::infer_base_folder(src);
+  auto pom_file = (base + "/pom.xml").cstr();
+  silog::trace("processing", pom_file);
 
-  auto src = jute::view::unsafe(fname);
-  auto base = infer_base_folder(src);
   auto tgt = base + "/target/classes";
   auto tst_tgt = base + "/target/test-classes";
-  auto pom_file = (base + "/pom.xml").cstr();
   auto tmpnam = (base + "/target/cavan-compile.args").cstr();
-
-  silog::trace("processing", pom_file);
 
   auto pom = cavan::read_pom(pom_file);
   cavan::eff_pom(pom);
@@ -133,20 +121,21 @@ static int compile(char * fname) {
   for (auto & [d, _] : deps) output_dep(tmpnam, d);
 
   jojo::append(tmpnam, "\n"_hs);
-  jojo::append(tmpnam, src);
 
   silog::trace("compiling", tmpnam);
-  auto cmd = ("javac @"_s + tmpnam).cstr();
+  auto cmd = ("javac @"_s + tmpnam + " " + src).cstr();
   return system(cmd.begin());
 }
 
 int main(int argc, char ** argv) try {
   if (argc != 2) cavan::fail("usage: compile.exe <java-file>");
 
-  char buffer[10240] {};
-  realpath(argv[1], buffer);
+  char fname[10240] {};
+  realpath(argv[1], fname);
 
-  return compile(buffer);
+  bool test_scope = strstr(fname, "src/test/");
+
+  return compile(jute::view::unsafe(fname), test_scope);
 } catch (...) {
   return 1;
 }
