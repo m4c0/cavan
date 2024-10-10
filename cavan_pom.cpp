@@ -181,4 +181,6 @@ static auto infer_pom_from_source(jute::view src) {
   }
   cavan::fail("file not in maven repo");
 }
-cavan::pom * cavan::read_pom_of_source(jute::view java_file) { return read_pom(infer_pom_from_source(java_file)); }
+cavan::pom * cavan::read_pom_of_source(jute::view java_file) {
+  return read_pom((infer_pom_from_source(java_file) + "/pom.xml").cstr());
+}

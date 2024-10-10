@@ -89,10 +89,7 @@ static void output_dep(const auto & tmpnam, const cavan::dep & d) {
   jojo::append(tmpnam, ":"_hs + jar);
 }
 
-static int compile(jute::view src, bool test_scope) {
-  auto pom = cavan::read_pom_of_source(src);
-  silog::trace("processing", pom->filename);
-
+static auto compile(cavan::pom * pom, bool test_scope) {
   auto base = jute::view { pom->filename }.rsplit('/').before;
 
   auto tmpnam = (base + "/target/cavan-compile.args").cstr();
@@ -122,10 +119,7 @@ static int compile(jute::view src, bool test_scope) {
   for (auto & [d, _] : deps) output_dep(tmpnam, d);
 
   jojo::append(tmpnam, "\n"_hs);
-
-  silog::trace("compiling", tmpnam);
-  auto cmd = ("javac @"_s + tmpnam + " " + src).cstr();
-  return system(cmd.begin());
+  return tmpnam;
 }
 
 int main(int argc, char ** argv) try {
@@ -136,7 +130,14 @@ int main(int argc, char ** argv) try {
 
   bool test_scope = strstr(fname, "src/test/");
 
-  return compile(jute::view::unsafe(fname), test_scope);
+  auto pom = cavan::read_pom_of_source(fname);
+  silog::trace("processing", pom->filename);
+
+  auto tmpnam = compile(pom, test_scope);
+
+  silog::trace("compiling", tmpnam);
+  auto cmd = ("javac @"_s + tmpnam + " " + fname).cstr();
+  return system(cmd.begin());
 } catch (...) {
   return 1;
 }
