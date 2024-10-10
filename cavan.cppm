@@ -69,19 +69,11 @@ namespace cavan {
 
   export [[nodiscard]] pom * read_pom(jute::view file);
   export [[nodiscard]] pom * read_pom(jute::view grp, jute::view art, jute::view ver);
+  export [[nodiscard]] pom * read_pom_of_source(jute::view java_file);
   export void read_parent_chain(pom * p);
 
   export void merge_props(pom * p);
   export jute::heap apply_props(pom * p, jute::heap str);
 
   export void eff_pom(pom * p);
-
-  export auto infer_base_folder(jute::view src) {
-    while (src != "") {
-      auto [l, r] = src.rsplit('/');
-      if (r == "src") return l;
-      src = l;
-    }
-    cavan::fail("file not in maven repo");
-  }
 } // namespace cavan

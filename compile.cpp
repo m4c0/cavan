@@ -90,15 +90,16 @@ static void output_dep(const auto & tmpnam, const cavan::dep & d) {
 }
 
 static int compile(jute::view src, bool test_scope) {
-  auto base = cavan::infer_base_folder(src);
-  auto pom_file = (base + "/pom.xml").cstr();
-  silog::trace("processing", pom_file);
+  auto pom = cavan::read_pom_of_source(src);
+  silog::trace("processing", pom->filename);
+
+  auto base = jute::view { pom->filename }.rsplit('/').before;
+
+  auto tmpnam = (base + "/target/cavan-compile.args").cstr();
 
   auto tgt = base + "/target/classes";
   auto tst_tgt = base + "/target/test-classes";
-  auto tmpnam = (base + "/target/cavan-compile.args").cstr();
 
-  auto pom = cavan::read_pom(pom_file);
   cavan::eff_pom(pom);
 
   for (auto m : pom->ppom->modules) {

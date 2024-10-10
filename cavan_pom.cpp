@@ -172,3 +172,13 @@ void cavan::read_parent_chain(pom * p) try {
 } catch (...) {
   cavan::whilst("reading chain of " + p->grp + ":" + p->art + ":" + p->ver);
 }
+
+static auto infer_pom_from_source(jute::view src) {
+  while (src != "") {
+    auto [l, r] = src.rsplit('/');
+    if (r == "src") return l;
+    src = l;
+  }
+  cavan::fail("file not in maven repo");
+}
+cavan::pom * cavan::read_pom_of_source(jute::view java_file) { return read_pom(infer_pom_from_source(java_file)); }
