@@ -3,6 +3,7 @@
 #pragma leco add_impl cavan_javac
 #pragma leco add_impl cavan_lint
 #pragma leco add_impl cavan_pom
+#pragma leco add_impl cavan_profiles
 #pragma leco add_impl cavan_props
 #pragma leco add_impl cavan_tokenizer
 export module cavan;
@@ -67,6 +68,7 @@ namespace cavan {
   void lint_xml(const tokens & tokens);
 
   [[nodiscard]] deps list_deps(const token *& t);
+  void list_profiles(const token *& t, pom * res);
 
   export [[nodiscard]] pom * read_pom(jute::view file);
   export [[nodiscard]] pom * read_pom(jute::view grp, jute::view art, jute::view ver);

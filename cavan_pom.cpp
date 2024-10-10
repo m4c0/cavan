@@ -78,6 +78,7 @@ static void parse_project(const cavan::token *& t, cavan::pom & res) {
   else if (match(*t, T_OPEN_TAG, "dependencies")) res.deps = list_deps(t);
   else if (match(*t, T_OPEN_TAG, "properties")) res.props = list_props(t);
   else if (match(*t, T_OPEN_TAG, "modules")) res.modules = list_modules(t);
+  else if (match(*t, T_OPEN_TAG, "profiles")) list_profiles(t, &res);
   else lint_tag(t);
 }
 
