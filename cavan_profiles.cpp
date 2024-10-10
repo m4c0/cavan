@@ -1,9 +1,22 @@
 module cavan;
 import silog;
 
+static bool take_property(const cavan::token *& t) {
+  jute::view name;
+  take_tag("name", t, &name);
+
+  if (!name.size()) return false;
+
+  bool reverse = name[0] == '!';
+  if (reverse) name = name.subview(1).after;
+  // Simple logic to assume no variable is defined
+  return reverse;
+}
+
 static bool take_activation(const cavan::token *& t) {
-  lint_tag(t);
-  return false;
+  auto res = false;
+  take_if(t, "property", [&] { res |= take_property(t); });
+  return res;
 }
 
 void cavan::list_profiles(const cavan::token *& t, cavan::pom * res) {
@@ -12,11 +25,9 @@ void cavan::list_profiles(const cavan::token *& t, cavan::pom * res) {
   bool active = false;
   take(t, "profiles", [&] {
     take(t, "profile", [&] {
-      if (match(*t, T_OPEN_TAG, "activation")) active = take_activation(t);
-      else if (match(*t, T_OPEN_TAG, "dependencyManagement"))
-        take_if(t, "dependencyManagement", [&] { dm = list_deps(t); });
-      else if (match(*t, T_OPEN_TAG, "dependencies")) deps = list_deps(t);
-      else lint_tag(t);
+      take_if(t, "activation", [&] { active = take_activation(t); });
+      take_if(t, "dependencyManagement", [&] { dm = list_deps(t); });
+      take_if(t, "dependencies", [&] { deps = list_deps(t); });
     });
   });
 
