@@ -67,7 +67,7 @@ static auto read_directive(strm & b) {
   auto t = read_tag(b);
   t.text = t.text.subview(1).after;
   t.type = T_DIRECTIVE;
-  return t;
+  return token {}; //t;
 }
 
 static auto read_comment(strm & b) {

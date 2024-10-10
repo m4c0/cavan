@@ -28,8 +28,5 @@ void cavan::lint_tag(const token *& t) {
 
 void cavan::lint_xml(const cavan::tokens & tokens) {
   auto * t = tokens.begin();
-
-  if (match(*t, T_DIRECTIVE, "xml")) t++;
-
   return lint_tag(t);
 }
