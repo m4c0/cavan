@@ -1,5 +1,6 @@
 #pragma leco add_impl cavan_deps
 #pragma leco add_impl cavan_effpom
+#pragma leco add_impl cavan_javac
 #pragma leco add_impl cavan_lint
 #pragma leco add_impl cavan_pom
 #pragma leco add_impl cavan_props
@@ -76,4 +77,6 @@ namespace cavan {
   export jute::heap apply_props(pom * p, jute::heap str);
 
   export void eff_pom(pom * p);
+
+  export hai::cstr generate_javac_argfile(pom * pom, bool test_scope);
 } // namespace cavan
