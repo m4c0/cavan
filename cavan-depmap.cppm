@@ -48,5 +48,16 @@ namespace cavan {
 
       pair.dep = d;
     }
+
+    void manage(dep * d) const {
+      auto idx = m_idx[*(d->grp + ":" + d->art)];
+      if (idx == 0) return;
+      auto & dm = m_list.seek(idx - 1).dep;
+
+      if (d->scp == "") d->scp = dm.scp;
+      if (!d->exc) d->exc = dm.exc;
+      if (d->ver.size() == 0) d->ver = dm.ver;
+      d->opt |= dm.opt;
+    }
   };
 } // namespace cavan

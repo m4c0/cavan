@@ -20,18 +20,10 @@ static void merge_parent_chain(cavan::pom * pom) try {
 
 static void update_deps_versions(cavan::pom * pom) try {
   for (auto & [d, _] : pom->deps) {
-    if (pom->deps_mgmt.has(d)) {
-      auto & [dm, depth] = pom->deps_mgmt[d];
-
-      if (d.scp == "") d.scp = dm.scp;
-      if (!d.exc) d.exc = dm.exc;
-      if (d.ver.size() == 0) d.ver = dm.ver;
-
-      d.opt |= dm.opt;
-    }
-    if (d.scp == "") d.scp = "compile";
+    pom->deps_mgmt.manage(&d);
     d.grp = cavan::apply_props(pom, d.grp);
     d.ver = cavan::apply_props(pom, d.ver);
+    if (d.scp == "") d.scp = "compile";
   }
   for (auto & [d, _] : pom->deps_mgmt) {
     d.grp = cavan::apply_props(pom, d.grp);
