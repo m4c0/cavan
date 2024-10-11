@@ -80,5 +80,5 @@ namespace cavan {
 
   export void eff_pom(pom * p);
 
-  export hai::cstr generate_javac_argfile(pom * pom, bool test_scope);
+  export hai::cstr generate_javac_argfile(pom * pom, bool test_scope, bool recurse);
 } // namespace cavan

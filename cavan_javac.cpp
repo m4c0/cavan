@@ -11,6 +11,7 @@ class context {
   cavan::deps * m_deps {};
   hai::fn<bool, cavan::dep &> m_excl = [](auto &) { return false; };
   hai::fn<const cavan::dep &, const cavan::dep &> m_dm = [](auto & d) -> auto & { return d; };
+  bool m_recurse;
 
   void add_dep(const cavan::dep & d, unsigned depth) try {
     auto dpom = cavan::read_pom(*d.grp, d.art, *d.ver);
@@ -23,7 +24,9 @@ class context {
       for (auto [g, a] : *d.exc) exc[(g + ":" + a).cstr()] = 1;
     }
 
-    context ctx { m_deps };
+    if (!m_recurse) return;
+
+    context ctx { m_deps, true };
     ctx.m_excl = [&](auto & d) {
       auto key = d.grp + ":" + d.art;
       if (exc[*key]) return true;
@@ -51,7 +54,7 @@ class context {
   }
 
 public:
-  explicit constexpr context(cavan::deps * ds) : m_deps { ds } {}
+  explicit constexpr context(cavan::deps * ds, bool recurse) : m_deps { ds }, m_recurse { recurse } {}
 
   void add_pom(cavan::pom * pom, bool test_scope) {
     m_dm = [&](auto & d) -> auto & {
@@ -84,7 +87,7 @@ static void output_dep(const auto & tmpnam, const cavan::dep & d) {
   jojo::append(tmpnam, ":"_hs + jar);
 }
 
-hai::cstr cavan::generate_javac_argfile(cavan::pom * pom, bool test_scope) {
+hai::cstr cavan::generate_javac_argfile(cavan::pom * pom, bool test_scope, bool recurse) {
   auto base = jute::view { pom->filename }.rsplit('/').before;
 
   auto tmpnam = (base + "/target/cavan-compile.args").cstr();
@@ -110,7 +113,7 @@ hai::cstr cavan::generate_javac_argfile(cavan::pom * pom, bool test_scope) {
   if (test_scope) jojo::append(tmpnam, ":"_hs + tst_tgt);
 
   cavan::deps deps {};
-  context { &deps }.add_pom(pom, test_scope);
+  context { &deps, recurse }.add_pom(pom, test_scope);
   for (auto & [d, _] : deps) output_dep(tmpnam, d);
 
   jojo::append(tmpnam, "\n"_hs);

@@ -22,10 +22,10 @@ int main(int argc, char ** argv) try {
       auto [dir, fn] = jute::view { pom->filename }.rsplit('/');
       auto cpom = dir + "/" + m + "/pom.xml";
       auto pom = cavan::read_pom(cpom.cstr());
-      cavan::generate_javac_argfile(pom, true);
+      cavan::generate_javac_argfile(pom, true, false);
     }
   } else {
-    cavan::generate_javac_argfile(pom, true);
+    cavan::generate_javac_argfile(pom, true, false);
   }
 } catch (...) {
   return 1;
