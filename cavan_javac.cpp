@@ -109,6 +109,7 @@ hai::cstr cavan::generate_javac_argfile(cavan::pom * pom, bool test_scope, bool 
   }
 
   jojo::write(tmpnam, "-d "_hs + (test_scope ? tst_tgt : tgt) + "\n");
+  jojo::append(tmpnam, "-target 1.7\n"_hs);
   jojo::append(tmpnam, "-cp "_hs + tgt);
   if (test_scope) jojo::append(tmpnam, ":"_hs + tst_tgt);
 
