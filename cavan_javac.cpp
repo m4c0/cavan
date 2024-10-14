@@ -7,64 +7,63 @@ import jojo;
 static const jute::heap m2repo { jute::view::unsafe(getenv("HOME")) + "/.m2/repository" };
 
 namespace {
-class context {
-  cavan::deps * m_deps {};
-  hai::fn<bool, cavan::dep &> m_excl = [](auto &) { return false; };
-  hai::fn<const cavan::dep &, const cavan::dep &> m_dm = [](auto & d) -> auto & { return d; };
-  bool m_recurse;
+  class context {
+    cavan::deps * m_deps {};
+    hai::fn<bool, cavan::dep &> m_excl = [](auto &) { return false; };
+    hai::fn<void, cavan::dep *> m_dm = [](auto) {};
+    bool m_recurse {};
 
-  void add_dep(const cavan::dep & d, unsigned depth) try {
-    auto dpom = cavan::read_pom(*d.grp, d.art, *d.ver);
-    cavan::eff_pom(dpom);
+    void add_dep(const cavan::dep & d, unsigned depth) try {
+      auto dpom = cavan::read_pom(*d.grp, d.art, *d.ver);
+      cavan::eff_pom(dpom);
 
-    m_deps->push_back(d, depth);
+      m_deps->push_back(d, depth);
 
-    hashley::niamh exc { 27 };
-    if (d.exc) {
-      for (auto [g, a] : *d.exc) exc[(g + ":" + a).cstr()] = 1;
+      hashley::niamh exc { 27 };
+      if (d.exc) {
+        for (auto [g, a] : *d.exc) exc[(g + ":" + a).cstr()] = 1;
+      }
+
+      if (!m_recurse) return;
+
+      context ctx { m_deps, true };
+      ctx.m_excl = [&](auto & d) {
+        auto key = d.grp + ":" + d.art;
+        if (exc[*key]) return true;
+        return m_excl(d);
+      };
+      ctx.m_dm = [&](auto * d) {
+        dpom->deps_mgmt.manage(d);
+        return m_dm(d);
+      };
+      ctx.add_deps(dpom, false, depth);
+    } catch (...) {
+      cavan::whilst("processing dependency " + *d.grp + ":" + d.art + ":" + *d.ver);
     }
 
-    if (!m_recurse) return;
+    void add_deps(cavan::pom * pom, bool test_scope, int pdepth) {
+      for (auto [d, depth] : pom->deps) {
+        if (d.opt) continue;
+        if (d.cls != "jar"_s && d.cls != ""_s) continue;
+        if (test_scope && d.scp != "test"_s && d.scp != "compile"_s && d.scp != "provided") continue;
+        if (!test_scope && d.scp != "compile"_s && d.scp != "provided") continue;
 
-    context ctx { m_deps, true };
-    ctx.m_excl = [&](auto & d) {
-      auto key = d.grp + ":" + d.art;
-      if (exc[*key]) return true;
-      return m_excl(d);
-    };
-    ctx.m_dm = [&](auto & d) -> auto & {
-      if (dpom->deps_mgmt.has(d)) return m_dm(dpom->deps_mgmt[d].dep);
-      return m_dm(d);
-    };
-    ctx.add_deps(dpom, false);
-  } catch (...) {
-    cavan::whilst("processing dependency " + *d.grp + ":" + d.art + ":" + *d.ver);
-  }
-
-  void add_deps(cavan::pom * pom, bool test_scope) {
-    for (auto & [d, depth] : pom->deps) {
-      if (m_deps->has(d)) continue;
-      if (m_excl(d)) continue;
-      if (d.opt) continue;
-      if (d.cls != "jar"_s && d.cls != ""_s) continue;
-      if (test_scope && d.scp != "test"_s && d.scp != "compile"_s) continue;
-      if (!test_scope && d.scp != "compile"_s) continue;
-      add_dep(m_dm(d), depth);
+        if (m_deps->has(d)) continue;
+        if (m_excl(d)) continue;
+        m_dm(&d);
+        add_dep(d, depth + pdepth);
+      }
     }
-  }
 
-public:
-  explicit constexpr context(cavan::deps * ds, bool recurse) : m_deps { ds }, m_recurse { recurse } {}
+  public:
+    explicit constexpr context(cavan::deps * ds, bool recurse) : m_deps { ds }, m_recurse { recurse } {}
 
-  void add_pom(cavan::pom * pom, bool test_scope) {
-    m_dm = [&](auto & d) -> auto & {
-      if (pom->deps_mgmt.has(d)) return pom->deps_mgmt[d].dep;
-      return d;
-    };
-    add_deps(pom, test_scope);
-  }
-};
-}
+    void add_pom(cavan::pom * pom, bool test_scope) {
+      m_dm = [&](auto * d) { pom->deps_mgmt.manage(d); };
+      add_deps(pom, test_scope, 0);
+    }
+  };
+} // namespace
 
 static void output_dep(const auto & tmpnam, const cavan::dep & d) {
   auto dpom = cavan::read_pom(*d.grp, d.art, *d.ver);
