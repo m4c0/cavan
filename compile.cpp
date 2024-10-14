@@ -17,11 +17,11 @@ int main(int argc, char ** argv) try {
   bool test_scope = strstr(fname, "src/test/");
 
   auto pom = cavan::read_pom_of_source(fname);
-  silog::trace("processing", pom->filename);
+  // silog::trace("processing", pom->filename);
 
   auto tmpnam = generate_javac_argfile(pom, test_scope, false);
 
-  silog::trace("compiling", tmpnam);
+  // silog::trace("compiling", tmpnam);
   auto cmd = ("javac @"_s + tmpnam + " " + fname).cstr();
   return system(cmd.begin());
 } catch (...) {
