@@ -151,6 +151,12 @@ static auto read_tagish(strm & b) {
 }
 
 tokens split_tokens(jute::view xml) {
+  auto xml_u = reinterpret_cast<const unsigned char *>(xml.begin());
+  if (xml.size() >= 3 && xml_u[0] == 0xEF && xml_u[1] == 0xBB && xml_u[2] == 0xBF) {
+    // Let's ignore UTF-8 marker for now
+    xml = xml.subview(3).after;
+  }
+
   strm buffer { xml }; 
 
   tokens ts { 10240 };
