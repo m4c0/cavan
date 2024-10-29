@@ -19,6 +19,15 @@ void take_tag(jute::view exp_id, const token *& t, jute::heap * out) {
   *out = jute::heap { jute::no_copy {}, tmp };
 }
 
+void take_opt_tag(jute::view exp_id, const token *& t, jute::view * out) {
+  t++;
+  if (match(*t, T_TEXT)) {
+    *out = t->text;
+    t++;
+  }
+  if (!match(*t, T_CLOSE_TAG, exp_id)) fail("missing close tag for " + exp_id);
+}
+
 static void take_exclusions(const token *& t, auto & exc) try {
   exc = hai::sptr<hai::chain<cavan::excl>>::make(16U);
 
@@ -57,8 +66,11 @@ static dep take_dep(const token *& t) try {
       take_tag("optional", t, &tmp);
       d.opt = "true"_s == tmp;
     } else if (match(*t, T_OPEN_TAG, "classifier")) {
-      take_tag("classifier", t, &d.cls);
+      take_opt_tag("classifier", t, &d.cls);
     } else if (match(*t, T_TAG, "classifier")) {
+    } else if (match(*t, T_OPEN_TAG, "systemPath")) {
+      jute::view tmp {};
+      take_opt_tag("systemPath", t, &tmp);
     } else if (match(*t, T_OPEN_TAG, "type")) {
       take_tag("type", t, &d.typ);
     } else if (match(*t, T_OPEN_TAG, "exclusions")) {
