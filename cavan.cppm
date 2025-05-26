@@ -70,6 +70,8 @@ namespace cavan {
   [[nodiscard]] deps list_deps(const token *& t);
   void list_profiles(const token *& t, pom * res);
 
+  export [[nodiscard]] hai::cstr path_of(jute::view grp, jute::view art, jute::view ver, jute::view type);
+
   export [[nodiscard]] pom * read_pom(jute::view file);
   export [[nodiscard]] pom * read_pom(jute::view grp, jute::view art, jute::view ver);
   export [[nodiscard]] pom * read_pom_of_source(jute::view java_file);

@@ -123,23 +123,25 @@ cavan::pom * cavan::read_pom(jute::view file) try {
   cavan::whilst("reading POM from " + file);
 }
 
+hai::cstr cavan::path_of(jute::view grp, jute::view art, jute::view ver, jute::view type) {
+  auto home_env = getenv("HOME");
+  if (!home_env) fail("missing HOME environment variable");
+
+  auto grp_path = grp.cstr();
+  for (auto & c : grp_path) if (c == '.') c = '/';
+
+  auto home = jute::view::unsafe(home_env);
+  auto path = home + "/.m2/repository/" + grp_path + "/" + art + "/" + ver + "/" + art + "-" + ver + "." + type;
+  return path.cstr();
+}
+
 cavan::pom * cavan::read_pom(jute::view grp, jute::view art, jute::view ver) try {
   if (grp == "" || art == "" || ver == "") fail("missing identifier");
 
   auto cached = g_cache.get(grp, art, ver);
   if (cached) return cached;
 
-  auto home_env = getenv("HOME");
-  if (!home_env) fail("missing HOME environment variable");
-
-  auto grp_path = grp.cstr();
-  for (auto & c : grp_path)
-    if (c == '.') c = '/';
-
-  auto home = jute::view::unsafe(home_env);
-  auto pom_file = home + "/.m2/repository/" + grp_path + "/" + art + "/" + ver + "/" + art + "-" + ver + ".pom";
-
-  return read_pom(pom_file.cstr());
+  return read_pom(path_of(grp, art, ver, "pom"));
 } catch (...) {
   cavan::whilst("parsing POM of " + grp + ":" + art + ":" + ver);
 }
