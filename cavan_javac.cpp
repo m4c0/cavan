@@ -86,6 +86,22 @@ static void output_dep(const auto & tmpnam, const cavan::dep & d) {
   jojo::append(tmpnam, ":"_hs + jar);
 }
 
+hai::array<cavan::pom *> cavan::read_modules(cavan::pom * pom) try {
+  hai::array<cavan::pom *> res { pom->modules.size() };
+  auto dir = jute::view { pom->filename }.rsplit('/').before;
+  for (auto i = 0; i < res.size(); i++) {
+    auto cpom = dir + "/" + pom->modules.seek(i) + "/pom.xml";
+    try {
+      res[i] = cavan::read_pom(cpom.cstr());
+    } catch (...) {
+      cavan::whilst("reading module " + pom->modules.seek(i));
+    }
+  }
+  return res;
+} catch (...) {
+  cavan::whilst("reading modules of " + jute::view { pom->filename });
+}
+
 hai::cstr cavan::generate_javac_argfile(cavan::pom * pom, bool test_scope, bool recurse) {
   auto base = jute::view { pom->filename }.rsplit('/').before;
 
@@ -95,17 +111,8 @@ hai::cstr cavan::generate_javac_argfile(cavan::pom * pom, bool test_scope, bool 
   auto tst_tgt = base + "/target/test-classes";
 
   cavan::eff_pom(pom);
-
-  for (auto m : pom->ppom->modules) {
-    auto [dir, fn] = jute::view { pom->ppom->filename }.rsplit('/');
-    auto cpom = dir + "/" + m + "/pom.xml";
-    try {
-      auto pom = cavan::read_pom(cpom.cstr());
-      cavan::eff_pom(pom);
-    } catch (...) {
-      cavan::whilst("reading module " + m);
-    }
-  }
+  if (pom->ppom)
+    for (auto p : cavan::read_modules(pom->ppom)) cavan::eff_pom(p);
 
   jojo::write(tmpnam, "-d "_hs + (test_scope ? tst_tgt : tgt) + "\n");
   jojo::append(tmpnam, "--release 17\n"_hs);
