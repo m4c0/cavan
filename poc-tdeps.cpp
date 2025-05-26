@@ -2,6 +2,7 @@
 
 import cavan;
 import hai;
+import hashley;
 import jute;
 import print;
 
@@ -33,6 +34,18 @@ static auto q_dequeue(queue * q) {
   return hai::uptr { n };
 }
 
+struct resolved {
+  hashley::niamh deps { 1023 };
+};
+static void r_add(resolved * r, jute::view grp, jute::view art) {
+  auto key = (grp + ":" + art).cstr();
+  r->deps[key] = 1;
+}
+static bool r_has(resolved * r, jute::view grp, jute::view art) {
+  auto key = (grp + ":" + art).cstr();
+  return r->deps[key] == 1;
+}
+
 static void preload_modules(cavan::pom * pom) {
   auto _ = cavan::read_modules(pom);
   if (pom->ppom) preload_modules(pom->ppom);
@@ -48,8 +61,11 @@ int main(int argc, char ** argv) try {
   cavan::read_parent_chain(pom);
   preload_modules(pom);
 
+  resolved r {};
   queue q {};
+
   q_enqueue(&q, pom);
+  r_add(&r, pom->grp, pom->art);
 
   while (q.first) {
     auto pom = q_dequeue(&q)->pom;
@@ -62,11 +78,13 @@ int main(int argc, char ** argv) try {
       if (d.cls != "jar" && d.cls != "") continue;
       if (d.scp != "compile") continue;
 
+      if (r_has(&r, *d.grp, d.art)) continue;
+
       // TODO: exclusions
-      // TODO: avoid adding if already added
       // TODO: check shallower dep mgmt
       auto dpom = cavan::read_pom(*d.grp, d.art, *d.ver);
       q_enqueue(&q, dpom);
+      r_add(&r, *d.grp, d.art);
     }
   }
 } catch (...) {
