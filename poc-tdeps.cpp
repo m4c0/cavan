@@ -4,34 +4,33 @@ import cavan;
 import hai;
 import jute;
 import print;
-import traits;
 
-struct q_data {
-  cavan::pom * pom;
-};
-struct q_node : q_data {
-  hai::uptr<q_node> next {};
+struct q_node {
+  cavan::pom * pom {};
+  q_node * next {};
 };
 struct queue {
-  hai::uptr<q_node> first {};
+  q_node * first {};
   q_node * last {};
 };
 
 static auto q_enqueue(queue * q, cavan::pom * pom) {
-  auto n = hai::uptr<q_node>::make(q_data { pom });
-  auto * ptr = &*n;
-  if (q->last) {
-    q->last->next = traits::move(n);
+  auto * n = new q_node { pom };
+  if (!q->first) {
+    q->first = n;
+    q->last = n;
   } else {
-    q->first = traits::move(n);
+    q->last->next = n;
+    q->last = n;
   }
-  q->last = ptr;
 }
 static auto q_dequeue(queue * q) {
-  q_data data = *(q->first);
-  q->first = traits::move(q->first->next);
+  if (!q->first) throw 0;
+
+  auto n = q->first;
+  q->first = q->first->next;
   if (!q->first) q->last = nullptr;
-  return data;
+  return hai::uptr { n };
 }
 
 static void preload_modules(cavan::pom * pom) {
@@ -52,9 +51,23 @@ int main(int argc, char ** argv) try {
   queue q {};
   q_enqueue(&q, pom);
 
-  while (q.last) {
-    auto [pom] = q_dequeue(&q);
+  while (q.first) {
+    auto pom = q_dequeue(&q)->pom;
     putln(pom->filename);
+
+    cavan::eff_pom(pom);
+
+    for (auto &[d, _]: pom->deps) {
+      if (d.opt) continue;
+      if (d.cls != "jar" && d.cls != "") continue;
+      if (d.scp != "compile") continue;
+
+      // TODO: exclusions
+      // TODO: avoid adding if already added
+      // TODO: check shallower dep mgmt
+      auto dpom = cavan::read_pom(*d.grp, d.art, *d.ver);
+      q_enqueue(&q, dpom);
+    }
   }
 } catch (...) {
   return 3;
