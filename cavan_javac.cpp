@@ -86,7 +86,7 @@ static void output_dep(const auto & tmpnam, const cavan::dep & d) {
   jojo::append(tmpnam, ":"_hs + jar);
 }
 
-hai::array<cavan::pom *> cavan::read_modules(cavan::pom * pom) try {
+hai::array<cavan::pom *> cavan::read_modules(const cavan::pom * pom) try {
   hai::array<cavan::pom *> res { pom->modules.size() };
   auto dir = jute::view { pom->filename }.rsplit('/').before;
   for (auto i = 0; i < res.size(); i++) {

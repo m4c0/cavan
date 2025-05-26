@@ -80,7 +80,7 @@ namespace cavan {
 
   export void eff_pom(pom * p);
 
-  export [[nodiscard]] hai::array<pom *> read_modules(pom * p);
+  export [[nodiscard]] hai::array<pom *> read_modules(const pom * p);
 
   export hai::cstr generate_javac_argfile(pom * pom, bool test_scope, bool recurse);
 } // namespace cavan
