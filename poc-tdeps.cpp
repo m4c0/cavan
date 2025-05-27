@@ -92,7 +92,7 @@ int main(int argc, char ** argv) try {
 
     cavan::eff_pom(pom);
 
-    for (auto [d, _]: pom->deps) {
+    for (auto [d, _]: pom->deps) try {
       if (r_has(&r, *d.grp, d.art)) continue;
  
       if (ctx_excl(n, *(d.grp + ":" + d.art))) continue;
@@ -114,6 +114,12 @@ int main(int argc, char ** argv) try {
         dn->exc[(g + ":" + a).cstr()] = 1;
       }
       r_add(&r, *d.grp, d.art);
+    } catch (...) {
+      while (n) {
+        errln("requested from ", n->pom->filename);
+        n = n->ctx;
+      }
+      throw;
     }
   }
 } catch (...) {
