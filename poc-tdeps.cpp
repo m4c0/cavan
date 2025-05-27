@@ -52,13 +52,14 @@ static void preload_modules(cavan::pom * pom) {
   if (pom->ppom) preload_modules(pom->ppom);
 }
 
-static auto ctx_check_ver(q_node * ctx, const cavan::dep & d, jute::heap ver) {
-  if (!ctx) return ver;
+static const cavan::deps * ctx_owner(q_node * ctx, const cavan::dep & d) {
+  if (!ctx) return {};
 
-  auto & dm = ctx->pom->deps_mgmt;
-  if (dm.has(d)) ver = dm[d].dep.ver;
+  auto * dm = ctx_owner(ctx->ctx, d);
+  if (dm) return dm;
 
-  return ctx_check_ver(ctx->ctx, d, ver);
+  dm = &ctx->pom->deps_mgmt;
+  return dm->has(d) ? dm : nullptr;
 }
 
 int main(int argc, char ** argv) try {
@@ -84,18 +85,22 @@ int main(int argc, char ** argv) try {
 
     cavan::eff_pom(pom);
 
-    for (auto &[d, _]: pom->deps) {
+    for (auto [d, _]: pom->deps) {
+      if (r_has(&r, *d.grp, d.art)) continue;
+
+      auto * dm = ctx_owner(n, d);
+      if (dm) {
+        auto ver = (*dm)[d].dep.ver;
+        dm->manage(&d);
+        d.ver = ver;
+      }
+
       if (d.opt) continue;
       if (d.cls != "jar" && d.cls != "") continue;
       if (d.scp != "compile") continue;
 
-      if (r_has(&r, *d.grp, d.art)) continue;
-
-      // TODO: pull scope, exclusion along with version
-      auto ver = ctx_check_ver(n, d, d.ver);
-
       // TODO: exclusions
-      auto dpom = cavan::read_pom(*d.grp, d.art, *ver);
+      auto dpom = cavan::read_pom(*d.grp, d.art, *d.ver);
       q_enqueue(&q, dpom, n);
       r_add(&r, *d.grp, d.art);
     }
