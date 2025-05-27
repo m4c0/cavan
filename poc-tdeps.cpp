@@ -8,6 +8,7 @@ import print;
 
 struct q_node {
   cavan::pom * pom {};
+  hashley::niamh exc { 63 };
   q_node * ctx {};
   q_node * next {};
 };
@@ -17,7 +18,7 @@ struct queue {
 };
 
 static auto q_enqueue(queue * q, cavan::pom * pom, q_node * ctx) {
-  auto * n = new q_node { pom, ctx };
+  auto * n = new q_node { .pom = pom, .ctx = ctx };
   if (!q->first) {
     q->first = n;
     q->last = n;
@@ -25,6 +26,7 @@ static auto q_enqueue(queue * q, cavan::pom * pom, q_node * ctx) {
     q->last->next = n;
     q->last = n;
   }
+  return n;
 }
 static auto q_dequeue(queue * q) {
   if (!q->first) throw 0;
@@ -61,6 +63,11 @@ static const cavan::deps * ctx_owner(q_node * ctx, const cavan::dep & d) {
   dm = &ctx->pom->deps_mgmt;
   return dm->has(d) ? dm : nullptr;
 }
+static bool ctx_excl(q_node * ctx, jute::view key) {
+  if (!ctx) return false;
+  if (ctx->exc[key]) return true;
+  return ctx_excl(ctx->ctx, key);
+}
 
 int main(int argc, char ** argv) try {
   const auto shift = [&] { return jute::view::unsafe(argc == 1 ? "" : (--argc, *++argv)); };
@@ -87,6 +94,8 @@ int main(int argc, char ** argv) try {
 
     for (auto [d, _]: pom->deps) {
       if (r_has(&r, *d.grp, d.art)) continue;
+ 
+      if (ctx_excl(n, *(d.grp + ":" + d.art))) continue;
 
       auto * dm = ctx_owner(n, d);
       if (dm) {
@@ -99,9 +108,11 @@ int main(int argc, char ** argv) try {
       if (d.cls != "jar" && d.cls != "") continue;
       if (d.scp != "compile") continue;
 
-      // TODO: exclusions
       auto dpom = cavan::read_pom(*d.grp, d.art, *d.ver);
-      q_enqueue(&q, dpom, n);
+      auto dn = q_enqueue(&q, dpom, n);
+      if (d.exc) for (auto [g, a]: *d.exc) {
+        dn->exc[(g + ":" + a).cstr()] = 1;
+      }
       r_add(&r, *d.grp, d.art);
     }
   }
