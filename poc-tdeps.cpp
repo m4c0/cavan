@@ -8,6 +8,7 @@ import print;
 
 struct q_node {
   cavan::pom * pom {};
+  q_node * ctx {};
   q_node * next {};
 };
 struct queue {
@@ -15,8 +16,8 @@ struct queue {
   q_node * last {};
 };
 
-static auto q_enqueue(queue * q, cavan::pom * pom) {
-  auto * n = new q_node { pom };
+static auto q_enqueue(queue * q, cavan::pom * pom, q_node * ctx) {
+  auto * n = new q_node { pom, ctx };
   if (!q->first) {
     q->first = n;
     q->last = n;
@@ -31,7 +32,7 @@ static auto q_dequeue(queue * q) {
   auto n = q->first;
   q->first = q->first->next;
   if (!q->first) q->last = nullptr;
-  return hai::uptr { n };
+  return n;
 }
 
 struct resolved {
@@ -51,6 +52,15 @@ static void preload_modules(cavan::pom * pom) {
   if (pom->ppom) preload_modules(pom->ppom);
 }
 
+static auto ctx_check_ver(q_node * ctx, const cavan::dep & d, jute::heap ver) {
+  if (!ctx) return ver;
+
+  auto & dm = ctx->pom->deps_mgmt;
+  if (dm.has(d)) ver = dm[d].dep.ver;
+
+  return ctx_check_ver(ctx->ctx, d, ver);
+}
+
 int main(int argc, char ** argv) try {
   const auto shift = [&] { return jute::view::unsafe(argc == 1 ? "" : (--argc, *++argv)); };
 
@@ -64,11 +74,12 @@ int main(int argc, char ** argv) try {
   resolved r {};
   queue q {};
 
-  q_enqueue(&q, pom);
+  q_enqueue(&q, pom, nullptr);
   r_add(&r, pom->grp, pom->art);
 
   while (q.first) {
-    auto pom = q_dequeue(&q)->pom;
+    auto n = q_dequeue(&q);
+    auto pom = n->pom;
     putln(pom->filename);
 
     cavan::eff_pom(pom);
@@ -80,10 +91,12 @@ int main(int argc, char ** argv) try {
 
       if (r_has(&r, *d.grp, d.art)) continue;
 
+      // TODO: pull scope, exclusion along with version
+      auto ver = ctx_check_ver(n, d, d.ver);
+
       // TODO: exclusions
-      // TODO: check shallower dep mgmt
-      auto dpom = cavan::read_pom(*d.grp, d.art, *d.ver);
-      q_enqueue(&q, dpom);
+      auto dpom = cavan::read_pom(*d.grp, d.art, *ver);
+      q_enqueue(&q, dpom, n);
       r_add(&r, *d.grp, d.art);
     }
   }
