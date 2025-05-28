@@ -1,6 +1,3 @@
-module;
-extern "C" char * getenv(const char *);
-
 module cavan;
 import hai;
 import hashley;
@@ -121,18 +118,6 @@ cavan::pom * cavan::read_pom(jute::view file) try {
   return try_read(file);
 } catch (...) {
   cavan::whilst("reading POM from " + file);
-}
-
-hai::cstr cavan::path_of(jute::view grp, jute::view art, jute::view ver, jute::view type) {
-  auto home_env = getenv("HOME");
-  if (!home_env) fail("missing HOME environment variable");
-
-  auto grp_path = grp.cstr();
-  for (auto & c : grp_path) if (c == '.') c = '/';
-
-  auto home = jute::view::unsafe(home_env);
-  auto path = home + "/.m2/repository/" + grp_path + "/" + art + "/" + ver + "/" + art + "-" + ver + "." + type;
-  return path.cstr();
 }
 
 cavan::pom * cavan::read_pom(jute::view grp, jute::view art, jute::view ver) try {

@@ -2,6 +2,7 @@
 #pragma leco add_impl cavan_effpom
 #pragma leco add_impl cavan_javac
 #pragma leco add_impl cavan_lint
+#pragma leco add_impl cavan_pathof
 #pragma leco add_impl cavan_pom
 #pragma leco add_impl cavan_profiles
 #pragma leco add_impl cavan_props
