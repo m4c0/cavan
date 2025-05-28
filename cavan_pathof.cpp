@@ -34,8 +34,8 @@ static_assert(!is_timestamped("19520311"));
 static_assert(!is_timestamped(""));
 
 static constexpr jute::heap path_of_ver(jute::view ver) {
-  unsigned i = ver.size() - 2;
-  unsigned n = 0;
+  int i = ver.size() - 2;
+  int n = 0;
   for (; i > 1; i--) {
     if (ver[i] == '-') n++;
     if (n == 2) break;
@@ -51,6 +51,7 @@ static_assert(*path_of_ver("1.0-19520311.052501-42") == "1.0-SNAPSHOT");
 static_assert(*path_of_ver("1.0-19520311.052501-42a") == "1.0-19520311.052501-42a");
 static_assert(*path_of_ver("19520311.052501-42-1.0") == "19520311.052501-42-1.0");
 static_assert(*path_of_ver("1.0-a-b-c-19520311.052501-42") == "1.0-a-b-c-SNAPSHOT");
+static_assert(*path_of_ver("5") == "5");
 
 static constexpr auto path_of(jute::view home, jute::view grp, jute::view art, jute::view ver, jute::view type) {
   auto grp_path = grp.cstr();
