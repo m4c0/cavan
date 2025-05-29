@@ -86,22 +86,6 @@ static void output_dep(const auto & tmpnam, const cavan::dep & d) {
   jojo::append(tmpnam, ":"_hs + jar);
 }
 
-hai::array<cavan::pom *> cavan::read_modules(const cavan::pom * pom) try {
-  hai::array<cavan::pom *> res { pom->modules.size() };
-  auto dir = jute::view { pom->filename }.rsplit('/').before;
-  for (auto i = 0; i < res.size(); i++) {
-    auto cpom = dir + "/" + pom->modules.seek(i) + "/pom.xml";
-    try {
-      res[i] = cavan::read_pom(cpom.cstr());
-    } catch (...) {
-      cavan::whilst("reading module " + pom->modules.seek(i));
-    }
-  }
-  return res;
-} catch (...) {
-  cavan::whilst("reading modules of " + jute::view { pom->filename });
-}
-
 hai::cstr cavan::generate_javac_argfile(cavan::pom * pom, bool test_scope, bool recurse) {
   auto base = jute::view { pom->filename }.rsplit('/').before;
 

@@ -2,6 +2,7 @@
 #pragma leco add_impl cavan_effpom
 #pragma leco add_impl cavan_javac
 #pragma leco add_impl cavan_lint
+#pragma leco add_impl cavan_modules
 #pragma leco add_impl cavan_pathof
 #pragma leco add_impl cavan_pom
 #pragma leco add_impl cavan_profiles
@@ -84,6 +85,7 @@ namespace cavan {
   export void eff_pom(pom * p);
 
   export [[nodiscard]] hai::array<pom *> read_modules(const pom * p);
+  export void warm_modules_from_parent_chain(const pom * p);
 
   export hai::cstr generate_javac_argfile(pom * pom, bool test_scope, bool recurse);
 } // namespace cavan

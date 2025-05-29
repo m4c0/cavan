@@ -49,11 +49,6 @@ static bool r_has(resolved * r, jute::view grp, jute::view art) {
   return r->deps[key] == 1;
 }
 
-static void preload_modules(cavan::pom * pom) {
-  auto _ = cavan::read_modules(pom);
-  if (pom->ppom) preload_modules(pom->ppom);
-}
-
 static const cavan::deps * ctx_owner(q_node * ctx, const cavan::dep & d) {
   if (!ctx) return {};
 
@@ -77,7 +72,7 @@ int main(int argc, char ** argv) try {
 
   auto pom = cavan::read_pom(file);
   cavan::read_parent_chain(pom);
-  preload_modules(pom);
+  cavan::warm_modules_from_parent_chain(pom);
 
   resolved r {};
   queue q {};
