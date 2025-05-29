@@ -7,6 +7,7 @@
 #pragma leco add_impl cavan_pom
 #pragma leco add_impl cavan_profiles
 #pragma leco add_impl cavan_props
+#pragma leco add_impl cavan_tdeps
 #pragma leco add_impl cavan_tokenizer
 export module cavan;
 export import :depmap;
@@ -86,6 +87,8 @@ namespace cavan {
 
   export [[nodiscard]] hai::array<pom *> read_modules(const pom * p);
   export void warm_modules_from_parent_chain(const pom * p);
+
+  export hai::chain<cavan::pom *> resolve_transitive_deps(pom * p);
 
   export hai::cstr generate_javac_argfile(pom * pom, bool test_scope, bool recurse);
 } // namespace cavan
