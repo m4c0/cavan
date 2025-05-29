@@ -43,7 +43,7 @@ namespace cavan {
     hai::chain<jute::view> modules {};
 
     hashley::niamh prop_index { 173 };
-    bool effective {};
+    unsigned effectiveness {};
   };
 
   [[nodiscard]] constexpr bool match(const token & t, type tp) { return t.type == tp; }

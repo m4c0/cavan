@@ -1,6 +1,14 @@
 module cavan;
 
+enum effectiveness {
+  NONE = 0,
+  MERGED,
+  DONE,
+};
+
 static void merge_parent_chain(cavan::pom * pom) try {
+  if (pom->effectiveness >= MERGED) return;
+
   read_parent_chain(pom);
   merge_props(pom);
   if (pom->ppom) {
@@ -14,6 +22,7 @@ static void merge_parent_chain(cavan::pom * pom) try {
       pom->deps.push_back(d, depth + 1);
     }
   }
+  pom->effectiveness = MERGED;
 } catch (...) {
   cavan::whilst("merging chain of deps for pom of " + pom->grp + ":" + pom->art + ":" + pom->ver);
 }
@@ -50,13 +59,13 @@ static void apply_imports(cavan::pom * pom) try {
 }
 
 void cavan::eff_pom(cavan::pom * pom) try {
-  if (pom->effective) return;
+  if (pom->effectiveness == DONE) return;
 
   merge_parent_chain(pom);
   apply_imports(pom);
   update_deps_versions(pom);
 
-  pom->effective = true;
+  pom->effectiveness = DONE;
 } catch (...) {
   cavan::whilst("calculating effective pom of " + pom->grp + ":" + pom->art + ":" + pom->ver);
 }
