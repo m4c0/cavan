@@ -1,6 +1,5 @@
 #pragma leco add_impl cavan_deps
 #pragma leco add_impl cavan_effpom
-#pragma leco add_impl cavan_javac
 #pragma leco add_impl cavan_lint
 #pragma leco add_impl cavan_modules
 #pragma leco add_impl cavan_pathof
