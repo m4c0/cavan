@@ -2,7 +2,6 @@
 
 import cavan;
 import hai;
-import jojo;
 import jute;
 import missingno;
 import silog;

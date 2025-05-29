@@ -1,11 +1,7 @@
 #pragma leco tool
 
 import cavan;
-import hai;
-import jojo;
 import jute;
-import missingno;
-import traits;
 import silog;
 
 using namespace cavan;
