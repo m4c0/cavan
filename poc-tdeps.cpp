@@ -11,14 +11,35 @@ struct q_node {
   hashley::niamh exc { 63 };
   q_node * ctx {};
   q_node * next {};
+  q_node * next_alloc {};
 };
 struct queue {
   q_node * first {};
   q_node * last {};
 };
 
+static class q_allocs {
+  q_node * m_ptr;
+
+public:
+  ~q_allocs() {
+    while (m_ptr) { 
+      auto p = m_ptr;
+      m_ptr = m_ptr->next_alloc;
+      delete p;
+    }
+  }
+
+  void manage(q_node * n) {
+    n->next_alloc = m_ptr;
+    m_ptr = n;
+  }
+} g_q_allocs;
+
 static auto q_enqueue(queue * q, cavan::pom * pom, q_node * ctx) {
   auto * n = new q_node { .pom = pom, .ctx = ctx };
+  g_q_allocs.manage(n);
+
   if (!q->first) {
     q->first = n;
     q->last = n;
