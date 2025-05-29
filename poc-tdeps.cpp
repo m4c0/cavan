@@ -101,10 +101,11 @@ int main(int argc, char ** argv) try {
   q_enqueue(&q, pom, nullptr);
   r_add(&r, pom->grp, pom->art);
 
+  hai::chain<cavan::pom *> deps { 10240 };
   while (q.first) {
     auto n = q_dequeue(&q);
     auto pom = n->pom;
-    putln(pom->filename);
+    deps.push_back(pom);
 
     cavan::eff_pom(pom);
 
@@ -137,6 +138,10 @@ int main(int argc, char ** argv) try {
       }
       throw;
     }
+  }
+
+  for (auto p : deps) {
+    putln(cavan::path_of(p->grp, p->art, p->ver, "jar"));
   }
 } catch (...) {
   return 3;
