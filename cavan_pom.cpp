@@ -1,7 +1,6 @@
 module cavan;
 import hai;
 import hashley;
-import jojo;
 import silog;
 
 static class {
@@ -98,7 +97,7 @@ static cavan::pom parse_pom(const cavan::tokens & ts) {
 }
 
 static cavan::pom * try_read(jute::view file) {
-  auto xml = jojo::read_cstr(file);
+  auto xml = cavan::file_reader(file);
 
   auto tokens = cavan::split_tokens(xml);
   cavan::lint_xml(tokens);
@@ -110,14 +109,9 @@ static cavan::pom * try_read(jute::view file) {
 }
 
 cavan::pom * cavan::read_pom(jute::view file) try {
-  jojo::on_error([](void *, jute::view msg) {
-    silog::log(silog::error, "IO error: %s", msg.cstr().begin());
-    struct io_error {};
-    throw io_error {};
-  });
   return try_read(file);
 } catch (...) {
-  cavan::whilst("reading POM from " + file);
+  cavan::fail("IO error reading POM from " + file);
 }
 
 cavan::pom * cavan::read_pom(jute::view grp, jute::view art, jute::view ver) try {
@@ -132,11 +126,6 @@ cavan::pom * cavan::read_pom(jute::view grp, jute::view art, jute::view ver) try
 }
 
 static auto read_parent(cavan::pom * pom) try {
-  jojo::on_error([](void *, jute::view msg) {
-    struct io_error {};
-    throw io_error {};
-  });
-
   auto [dir, fn] = jute::view { pom->filename }.rsplit('/');
   auto [pdir, dn] = dir.rsplit('/');
   auto ppom = pdir + "/pom.xml";

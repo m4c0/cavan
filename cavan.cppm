@@ -46,6 +46,8 @@ namespace cavan {
     unsigned effectiveness {};
   };
 
+  export hai::fn<hai::cstr, jute::view> file_reader {};
+
   [[nodiscard]] constexpr bool match(const token & t, type tp) { return t.type == tp; }
   [[nodiscard]] constexpr bool match(const token & t, type tp, jute::view id) { return t.type == tp && t.text == id; }
 

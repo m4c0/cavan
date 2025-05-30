@@ -2,6 +2,7 @@
 
 import cavan;
 import hai;
+import jojo;
 import jute;
 import missingno;
 import silog;
@@ -22,6 +23,7 @@ static void run(jute::view fname) {
 }
 
 int main(int argc, char ** argv) try {
+  cavan::file_reader = jojo::read_cstr;
   for (auto i = 1; i < argc; i++) {
     run(jute::view::unsafe(argv[i]));
   }

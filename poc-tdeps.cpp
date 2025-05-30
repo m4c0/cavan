@@ -1,6 +1,7 @@
 #pragma leco tool
 
 import cavan;
+import jojo;
 import jute;
 import print;
 
@@ -9,6 +10,8 @@ int main(int argc, char ** argv) try {
 
   auto file = shift();
   if (file == "") die("missing file");
+
+  cavan::file_reader = jojo::read_cstr;
 
   auto pom = cavan::read_pom(file);
 
