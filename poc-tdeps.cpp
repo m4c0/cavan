@@ -5,6 +5,14 @@ import jojo;
 import jute;
 import print;
 
+// TODO: improve even further based on what DTRACE tells us
+// 1. Opening files (example mitigation: poc-tdeps-sqlite)
+// 2. Copying deps for effective poms
+//    a. The copy itself
+//    b. hashley::niamh::operator[]
+// 3. The global dtor cleaning up:
+//    a. POMs
+//    b. hash tables
 int main(int argc, char ** argv) try {
   const auto shift = [&] { return jute::view::unsafe(argc == 1 ? "" : (--argc, *++argv)); };
 
