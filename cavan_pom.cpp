@@ -3,7 +3,7 @@ import hai;
 import hashley;
 import silog;
 
-static class {
+static class cache {
   hai::chain<cavan::pom> m_buffer { 1024 };
   hashley::niamh m_idx { 7919 };
 
@@ -20,7 +20,7 @@ public:
     auto idx = m_idx[(grp + ":" + art + ":" + ver).cstr()];
     return idx == 0 ? nullptr : &m_buffer.seek(idx - 1);
   }
-} g_cache;
+} * g_cache = new cache {};
 
 static cavan::props list_props(const cavan::token *& t) {
   cavan::props res { 32 };
@@ -105,7 +105,7 @@ static cavan::pom * try_read(jute::view file) {
   auto pom = parse_pom(tokens);
   pom.xml = traits::move(xml);
   pom.filename = file.cstr();
-  return g_cache.take(traits::move(pom));
+  return g_cache->take(traits::move(pom));
 }
 
 cavan::pom * cavan::read_pom(jute::view file) try {
@@ -117,7 +117,7 @@ cavan::pom * cavan::read_pom(jute::view file) try {
 cavan::pom * cavan::read_pom(jute::view grp, jute::view art, jute::view ver) try {
   if (grp == "" || art == "" || ver == "") fail("missing identifier");
 
-  auto cached = g_cache.get(grp, art, ver);
+  auto cached = g_cache->get(grp, art, ver);
   if (cached) return cached;
 
   return read_pom(path_of(grp, art, ver, "pom"));
