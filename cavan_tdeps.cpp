@@ -114,7 +114,9 @@ hai::chain<cavan::pom *> cavan::resolve_transitive_deps(pom * pom) {
 
       if (d.opt) continue;
       if (d.cls != "jar" && d.cls != "") continue;
-      if (d.scp != "compile") continue;
+      if (d.scp != "compile" && d.scp != "provided") continue;
+
+      if (d.scp == "provided" && n->ctx) continue;
 
       auto dpom = cavan::read_pom(*d.grp, d.art, *d.ver);
       auto dn = q_enqueue(&q, dpom, n);
