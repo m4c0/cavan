@@ -67,14 +67,12 @@ static bool r_has(resolved * r, jute::view grp, jute::view art) {
   return r->deps[key] == 1;
 }
 
-static const cavan::deps * ctx_owner(q_node * ctx, const cavan::dep & d) {
-  if (!ctx) return {};
+static void ctx_manage(q_node * ctx, cavan::dep * d) {
+  if (!ctx) return;
 
-  auto * dm = ctx_owner(ctx->ctx, d);
-  if (dm) return dm;
+  ctx_manage(ctx->ctx, d);
 
-  dm = &ctx->pom->deps_mgmt;
-  return dm->has(d) ? dm : nullptr;
+  ctx->pom->deps_mgmt.manage(d);
 }
 static bool ctx_excl(q_node * ctx, jute::view key) {
   if (!ctx) return false;
@@ -105,12 +103,10 @@ hai::chain<cavan::pom *> cavan::resolve_transitive_deps(pom * pom) {
  
       if (ctx_excl(n, *(d.grp + ":" + d.art))) continue;
 
-      auto * dm = ctx_owner(n, d);
-      if (dm) {
-        auto ver = (*dm)[d].dep.ver;
-        dm->manage(&d);
-        d.ver = ver;
-      }
+      auto v = d.ver;
+      d.ver = {};
+      ctx_manage(n, &d);
+      if (*d.ver == "") d.ver = v;
 
       if (d.opt) continue;
       if (d.cls != "jar" && d.cls != "") continue;
