@@ -6,6 +6,7 @@ import silog;
 struct q_node {
   cavan::pom * pom {};
   hashley::niamh exc { 63 };
+  bool test {};
   q_node * ctx {};
   q_node * next {};
   q_node * next_alloc {};
@@ -87,7 +88,7 @@ hai::chain<cavan::pom *> cavan::resolve_transitive_deps(pom * pom) {
   resolved r {};
   queue q {};
 
-  q_enqueue(&q, pom, nullptr);
+  q_enqueue(&q, pom, nullptr)->test = true;
   r_add(&r, pom->grp, pom->art);
 
   hai::chain<cavan::pom *> deps { 10240 };
@@ -110,8 +111,9 @@ hai::chain<cavan::pom *> cavan::resolve_transitive_deps(pom * pom) {
 
       if (d.opt) continue;
       if (d.cls != "jar" && d.cls != "") continue;
-      if (d.scp != "" && d.scp != "compile" && d.scp != "provided") continue;
+      if (d.scp != "" && d.scp != "compile" && d.scp != "provided" && d.scp != "test") continue;
 
+      if (d.scp == "test" && !n->test) continue;
       if (d.scp == "provided" && n->ctx) continue;
 
       auto dpom = cavan::read_pom(*d.grp, d.art, *d.ver);
