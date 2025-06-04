@@ -114,7 +114,7 @@ hai::chain<cavan::pom *> cavan::resolve_transitive_deps(pom * pom) {
 
       if (d.opt) continue;
       if (d.cls != "jar" && d.cls != "") continue;
-      if (d.scp != "compile" && d.scp != "provided") continue;
+      if (d.scp != "" && d.scp != "compile" && d.scp != "provided") continue;
 
       if (d.scp == "provided" && n->ctx) continue;
 

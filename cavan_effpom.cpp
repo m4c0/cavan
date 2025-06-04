@@ -29,10 +29,10 @@ static void merge_parent_chain(cavan::pom * pom) try {
 
 static void update_deps_versions(cavan::pom * pom) try {
   for (auto & [d, _] : pom->deps) {
-    pom->deps_mgmt.manage(&d);
+    //pom->deps_mgmt.manage(&d); // We cannot resolve this early
     d.grp = cavan::apply_props(pom, d.grp);
     d.ver = cavan::apply_props(pom, d.ver);
-    if (d.scp == "") d.scp = "compile";
+    //if (d.scp == "") d.scp = "compile"; // We cannot resolve this early
   }
   for (auto & [d, _] : pom->deps_mgmt) {
     d.grp = cavan::apply_props(pom, d.grp);
