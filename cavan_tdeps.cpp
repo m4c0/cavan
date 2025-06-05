@@ -75,10 +75,11 @@ static void ctx_manage(q_node * ctx, cavan::dep * d) {
 
   ctx->pom->deps_mgmt.manage(d);
 }
-static bool ctx_excl(q_node * ctx, jute::view key) {
+static bool ctx_excl(q_node * ctx, jute::heap grp, jute::view art) {
   if (!ctx) return false;
-  if (ctx->exc[key]) return true;
-  return ctx_excl(ctx->ctx, key);
+  if (ctx->exc[*(grp + ":" + art)]) return true;
+  if (ctx->exc[*(grp + ":*")]) return true;
+  return ctx_excl(ctx->ctx, grp, art);
 }
 
 hai::chain<cavan::pom *> cavan::resolve_transitive_deps(pom * pom) {
@@ -102,7 +103,7 @@ hai::chain<cavan::pom *> cavan::resolve_transitive_deps(pom * pom) {
     for (auto [d, _]: pom->deps) try {
       if (r_has(&r, *d.grp, d.art)) continue;
  
-      if (ctx_excl(n, *(d.grp + ":" + d.art))) continue;
+      if (ctx_excl(n, d.grp, d.art)) continue;
 
       auto v = d.ver;
       d.ver = {};
