@@ -105,10 +105,14 @@ hai::chain<cavan::pom *> cavan::resolve_transitive_deps(pom * pom) {
  
       if (ctx_excl(n, d.grp, d.art)) continue;
 
-      auto v = d.ver;
-      d.ver = {};
-      ctx_manage(n, &d);
-      if (*d.ver == "") d.ver = v;
+      if (*d.ver == "") {
+        ctx_manage(n, &d);
+      } else {
+        auto v = d.ver;
+        d.ver = {};
+        ctx_manage(n->ctx, &d);
+        if (*d.ver == "") d.ver = v;
+      }
 
       if (d.opt) continue;
       if (d.cls != "jar" && d.cls != "") continue;
