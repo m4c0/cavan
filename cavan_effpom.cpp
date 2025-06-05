@@ -27,15 +27,20 @@ static void merge_parent_chain(cavan::pom * pom) try {
   cavan::whilst("merging chain of deps for pom of " + pom->grp + ":" + pom->art + ":" + pom->ver);
 }
 
+static void apply_props_to_grp(cavan::pom * pom, cavan::deps & deps, cavan::dep & d) {
+  auto grp = cavan::apply_props(pom, d.grp);
+  if (grp != d.grp) deps.replace_grp_in_key(&d, grp);
+}
+
 static void update_deps_versions(cavan::pom * pom) try {
   for (auto & [d, _] : pom->deps) {
     //pom->deps_mgmt.manage(&d); // We cannot resolve this early
-    d.grp = cavan::apply_props(pom, d.grp);
+    apply_props_to_grp(pom, pom->deps, d);
     d.ver = cavan::apply_props(pom, d.ver);
     //if (d.scp == "") d.scp = "compile"; // We cannot resolve this early
   }
   for (auto & [d, _] : pom->deps_mgmt) {
-    d.grp = cavan::apply_props(pom, d.grp);
+    apply_props_to_grp(pom, pom->deps_mgmt, d);
     d.ver = cavan::apply_props(pom, d.ver);
   }
 } catch (...) {

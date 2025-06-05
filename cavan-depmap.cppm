@@ -49,6 +49,15 @@ namespace cavan {
       pair.dep = d;
     }
 
+    void replace_grp_in_key(dep * d, jute::heap grp) {
+      auto & idx = m_idx[*(d->grp + ":" + d->art)];
+
+      d->grp = grp;
+      m_idx[*(d->grp + ":" + d->art)] = idx;
+
+      idx = 0;
+    }
+
     void manage(dep * d) const {
       auto idx = m_idx[*(d->grp + ":" + d->art)];
       if (idx == 0) return;
