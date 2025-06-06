@@ -90,6 +90,5 @@ namespace cavan {
   export void warm_modules_from_parent_chain(const pom * p);
 
   export hai::chain<cavan::pom *> resolve_transitive_deps(pom * p);
-
-  export hai::cstr generate_javac_argfile(pom * pom, bool test_scope, bool recurse);
+  export hai::array<hai::cstr> resolve_classpath(pom * p);
 } // namespace cavan

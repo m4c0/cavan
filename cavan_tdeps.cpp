@@ -1,6 +1,7 @@
 module cavan;
 import hai;
 import hashley;
+import mtime;
 import silog;
 
 struct q_node {
@@ -137,4 +138,22 @@ hai::chain<cavan::pom *> cavan::resolve_transitive_deps(pom * pom) {
   }
 
   return deps;
+}
+
+hai::array<hai::cstr> cavan::resolve_classpath(cavan::pom * pom) {
+  auto tdeps = cavan::resolve_transitive_deps(pom);
+  hai::array<hai::cstr> res { tdeps.size() };
+  auto * ptr = res.begin();
+  for (auto p : tdeps) {
+    jute::view fn { p->filename };
+    auto path = (fn.rsplit('.').before + ".jar").cstr();
+    if (mtime::of(path.begin())) {
+      *ptr++ = cavan::path_of(p->grp, p->art, p->ver, "jar");
+    } else {
+      *ptr++ = (fn.rsplit('/').before + "/target/classes").cstr();
+      // TODO: skip this if non-test
+      *ptr++ = (fn.rsplit('/').before + "/target/test-classes").cstr();
+    }
+  }
+  return res;
 }
