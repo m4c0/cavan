@@ -4,7 +4,7 @@ import cavan;
 import jojo;
 import jute;
 import hai;
-import silog;
+import print;
 
 using namespace jute::literals;
 
@@ -13,19 +13,25 @@ static void run(jute::view fname) {
   cavan::eff_pom(pom);
 
   for (auto & [d, _] : pom->deps_mgmt) {
-    silog::log(silog::info, "dep mgmt -- %s:%s:%s:%s:%s", (*d.grp).cstr().begin(), d.art.cstr().begin(),
-               (*d.ver).cstr().begin(), d.scp.cstr().begin(), d.typ.cstr().begin());
+    putfn("dep mgmt -- %s:%s:%s:%s:%s", (*d.grp).cstr().begin(), d.art.cstr().begin(),
+          (*d.ver).cstr().begin(), d.scp.cstr().begin(), d.typ.cstr().begin());
     if (d.exc)
       for (auto & [g, a] : *d.exc) {
-        silog::log(silog::info, "    excl -- %s:%s", g.cstr().begin(), a.cstr().begin());
+        put("\e[31m");
+        putfn("    excl -- %s:%s", g.cstr().begin(), a.cstr().begin());
+        put("\e[0m");
       }
   }
+  putln();
   for (auto & [d, _] : pom->deps) {
-    silog::log(silog::info, "dep -- %s:%s:%s:%s:%s", (*d.grp).cstr().begin(), d.art.cstr().begin(),
-               (*d.ver).cstr().begin(), d.scp.cstr().begin(), d.typ.cstr().begin());
+    pom->deps_mgmt.manage(&d);
+    putfn("     dep -- %s:%s:%s:%s:%s", (*d.grp).cstr().begin(), d.art.cstr().begin(),
+          (*d.ver).cstr().begin(), d.scp.cstr().begin(), d.typ.cstr().begin());
     if (d.exc)
       for (auto & [g, a] : *d.exc) {
-        silog::log(silog::info, "    excl -- %s:%s", g.cstr().begin(), a.cstr().begin());
+        put("\e[31m");
+        putfn("    excl -- %s:%s", g.cstr().begin(), a.cstr().begin());
+        put("\e[0m");
       }
   }
 }
@@ -33,7 +39,7 @@ static void run(jute::view fname) {
 int main(int argc, char ** argv) try {
   cavan::file_reader = jojo::read_cstr;
   for (auto i = 1; i < argc; i++) {
-    silog::log(silog::info, "reading %s", argv[i]);
+    putfn("reading %s", argv[i]);
     run(jute::view::unsafe(argv[i]));
   }
 } catch (...) {
