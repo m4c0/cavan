@@ -69,10 +69,11 @@ static bool r_has(resolved * r, jute::view grp, jute::view art) {
   return r->deps[key] == 1;
 }
 
-static void ctx_manage(q_node * ctx, cavan::dep * d) {
+static void ctx_manage(q_node * ctx, cavan::dep * d, int depth) {
   if (!ctx) return;
+  if (depth <= 0) return;
 
-  ctx_manage(ctx->ctx, d);
+  ctx_manage(ctx->ctx, d, depth - 1);
 
   ctx->pom->deps_mgmt.manage(d);
 }
@@ -101,18 +102,15 @@ hai::chain<cavan::pom *> cavan::resolve_transitive_deps(pom * pom) {
 
     cavan::eff_pom(pom);
 
-    for (auto [d, _]: pom->deps) try {
+    for (auto [d, d_depth]: pom->deps) try {
       if (r_has(&r, *d.grp, d.art)) continue;
  
       if (ctx_excl(n, d.grp, d.art)) continue;
 
       if (*d.ver == "") {
-        ctx_manage(n, &d);
+        ctx_manage(n, &d, 1000000);
       } else {
-        auto v = d.ver;
-        d.ver = {};
-        ctx_manage(n->ctx, &d);
-        if (*d.ver == "") d.ver = v;
+        ctx_manage(n, &d, d_depth);
       }
 
       if (d.opt) continue;
