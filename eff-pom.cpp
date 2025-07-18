@@ -8,12 +8,13 @@ import print;
 
 using namespace jute::literals;
 
-static void run(jute::view fname) {
+static void run(jute::view fname, jute::view filter) {
   auto pom = cavan::read_pom(fname);
   cavan::eff_pom(pom);
 
-  for (auto & [d, _] : pom->deps_mgmt) {
-    putln("dep mgmt -- ", d.grp, ":", d.art, ":", d.ver, ":", d.scp, ":", d.typ);
+  for (auto & [d, depth] : pom->deps_mgmt) {
+    if (!d.art.starts_with(filter)) continue;
+    putln("dep mgmt -- ", d.grp, ":", d.art, ":", d.ver, ":", d.scp, ":", d.typ, " depth=", depth);
     if (d.exc)
       for (auto & [g, a] : *d.exc) {
         put("\e[31m");
@@ -22,9 +23,10 @@ static void run(jute::view fname) {
       }
   }
   putln();
-  for (auto & [d, _] : pom->deps) {
+  for (auto & [d, depth] : pom->deps) {
+    if (!d.art.starts_with(filter)) continue;
     pom->deps_mgmt.manage(&d);
-    putln("     dep -- ", d.grp, ":", d.art, ":", d.ver, ":", d.scp, ":", d.typ);
+    putln("     dep -- ", d.grp, ":", d.art, ":", d.ver, ":", d.scp, ":", d.typ, " depth=", depth);
     if (d.exc)
       for (auto & [g, a] : *d.exc) {
         put("\e[31m");
@@ -36,9 +38,14 @@ static void run(jute::view fname) {
 
 int main(int argc, char ** argv) try {
   cavan::file_reader = jojo::read_cstr;
-  for (auto i = 1; i < argc; i++) {
-    putln("reading ", argv[i]);
-    run(jute::view::unsafe(argv[i]));
+  if (argc == 2) {
+    putln("reading ", argv[1]);
+    run(jute::view::unsafe(argv[1]), "");
+  } else if (argc == 3) {
+    putln("reading ", argv[1], " filter by [", argv[2], "]");
+    run(jute::view::unsafe(argv[1]), jute::view::unsafe(argv[2]));
+  } else {
+    die("invalid usage");
   }
 } catch (...) {
   return 1;
