@@ -2,7 +2,7 @@ module cavan;
 import :fail;
 import silog;
 
-void cavan::lint_tag(const token *& t) {
+void cavan::lint_tag(const cavan::token *& t) {
   if (match(*t, T_TAG)) return;
 
   if (!match(*t, T_OPEN_TAG)) return fail("missing open tag around [" + t->text + "]");
@@ -27,6 +27,6 @@ void cavan::lint_tag(const token *& t) {
 }
 
 void cavan::lint_xml(const cavan::tokens & tokens) {
-  auto * t = tokens.begin();
+  const auto * t = tokens.begin();
   return lint_tag(t);
 }

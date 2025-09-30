@@ -25,17 +25,17 @@ namespace cavan {
 
     constexpr bool has(const dep & d) const {
       auto key = d.grp + ":" + d.art;
-      return 0 != m_idx[*key];
+      return 0 != m_idx[key.cstr()];
     }
     constexpr auto & operator[](const dep & d) const {
       auto key = d.grp + ":" + d.art;
-      auto idx = m_idx[*key];
-      if (idx == 0) fail(*key + " not found");
+      auto idx = m_idx[key.cstr()];
+      if (idx == 0) fail(key + " not found");
       return m_list.seek(idx - 1);
     }
 
     void push_back(dep d, unsigned depth = 1) {
-      auto & idx = m_idx[*(d.grp + ":" + d.art)];
+      auto & idx = m_idx[(d.grp + ":" + d.art).cstr()];
 
       if (!idx) {
         m_list.push_back({ d, depth });
@@ -50,18 +50,19 @@ namespace cavan {
     }
 
     void replace_grp_in_key(dep * d, jute::heap grp) {
-      auto & idx = m_idx[*(d->grp + ":" + d->art)];
+      auto & idx = m_idx[(d->grp + ":" + d->art).cstr()];
 
       d->grp = grp;
-      m_idx[*(d->grp + ":" + d->art)] = idx;
+      m_idx[(d->grp + ":" + d->art).cstr()] = idx;
 
       idx = 0;
     }
 
-    void manage(dep * d) const {
-      auto idx = m_idx[*(d->grp + ":" + d->art)];
+    void manage(dep * d, unsigned depth = ~0U) const {
+      auto idx = m_idx[(d->grp + ":" + d->art).cstr()];
       if (idx == 0) return;
-      auto & dm = m_list.seek(idx - 1).dep;
+      auto &[dm, dp] = m_list.seek(idx - 1);
+      if (dp - 1 > depth) return;
 
       if (d->scp == "") d->scp = dm.scp;
       if (!d->exc) d->exc = dm.exc;

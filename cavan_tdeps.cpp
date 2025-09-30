@@ -75,12 +75,12 @@ static void ctx_manage(q_node * ctx, cavan::dep * d, int depth) {
 
   ctx_manage(ctx->ctx, d, depth - 1);
 
-  ctx->pom->deps_mgmt.manage(d);
+  ctx->pom->deps_mgmt.manage(d, depth);
 }
 static bool ctx_excl(q_node * ctx, jute::heap grp, jute::view art) {
   if (!ctx) return false;
-  if (ctx->exc[*(grp + ":" + art)]) return true;
-  if (ctx->exc[*(grp + ":*")]) return true;
+  if (ctx->exc[(grp + ":" + art).cstr()]) return true;
+  if (ctx->exc[(grp + ":*").cstr()]) return true;
   return ctx_excl(ctx->ctx, grp, art);
 }
 

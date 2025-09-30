@@ -40,10 +40,11 @@ static constexpr jute::heap path_of_ver(jute::view ver) {
     if (ver[i] == '-') n++;
     if (n == 2) break;
   }
-  if (n != 2) return is_timestamped(ver) ? "SNAPSHOT" : ver;
+  if (n != 2) return jute::heap { is_timestamped(ver) ? "SNAPSHOT" : ver };
 
   auto [base, r] = ver.subview(i + 1);
-  return is_timestamped(r) ? base + "SNAPSHOT" : ver;
+  if (is_timestamped(r)) return jute::heap { base + "SNAPSHOT" };
+  return jute::heap { ver };
 }
 static_assert(*path_of_ver("1.0") == "1.0");
 static_assert(*path_of_ver("19520311.052501-42") == "SNAPSHOT");

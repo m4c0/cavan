@@ -81,7 +81,7 @@ static void parse_project(const cavan::token *& t, cavan::pom & res) {
 static cavan::pom parse_pom(const cavan::tokens & ts) {
   using namespace cavan;
 
-  auto * t = ts.begin();
+  const auto * t = ts.begin();
 
   if (match(*t, T_DIRECTIVE, "xml")) t++;
 
